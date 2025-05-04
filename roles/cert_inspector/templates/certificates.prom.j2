@@ -1,0 +1,12 @@
+# HELP cert_expiry_seconds Time until certificate expires in seconds
+# TYPE cert_expiry_seconds gauge
+{% if cert_data is defined %}
+{% set now = current_time.stdout | int %}
+{% for result in cert_data %}
+{% if not result.failed %}
+{% set expiration_time = (result.not_after | to_datetime('%Y%m%d%H%M%SZ')).timestamp() | int %}
+{% set remaining = expiration_time - now %}
+cert_expiry_seconds{cert_path="{{ result.item.path }}", issuer="{{ result.issuer.commonName | default('unknown') }}", subject="{{ result.subject_alt_name[0] if result.subject_alt_name else (result.subject.commonName | default('unknown')) }}"} {{ remaining }}
+{% endif %}
+{% endfor %}
+{% endif %}
