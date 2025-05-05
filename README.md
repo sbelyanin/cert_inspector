@@ -30,6 +30,8 @@ cd cert_inspector
 ```
 
 ## Пробный запуск 
+### Рассмотрим простой вариант когда информация о сертификатах собирается, обрабатывается и выкладывается на всех хостах.
+### Каждый хост обрабатывается отдельно.
 1. Для пробноого тестирования будем использовать локальный хост и на него будут две ссылки localhost и delegate.
 Для этого используем конфигурационный файл inventory.yml:
 ```bash
@@ -50,16 +52,16 @@ all:
 
 2. Проверим доступность наших "хостов".
 Предварительно убедитесь что пользователь ansible есть в системе и у него есть необходиме права (для входа в систему через ssh).
-Если аутентификая по паролю:
+Если аутентификация по паролю:
 ```bash
 ansible all -m ping -i inventory.yml --ask-pass
 ```
-Если аутентификая по ssh ключу:
+Если аутентификация по ssh ключу:
 ```bash
 ansible all -m ping -i inventory.yml
 ```
 
-3. Отредактируйте или создайте простой Playbook playbooks/cert_inspector.yml: 
+3. Проверьте или отредактируйте простой Playbook playbooks/cert_inspector.yml: 
 ```bash
 ---
 - name: Certificate inspector
@@ -70,8 +72,49 @@ ansible all -m ping -i inventory.yml
 ```
 Удалите "become: true" если авторизация на хостах вам позволяет читать файлы с сертификатами без ипспользования sudo или по другим причинам безопастности.
 
-4. Запустите:
+4. Сделаем так, чтобы файл с метриками был уникальным на "хостах" и при выполнении задачи не затерался.
+Проверим файлы на наличие строк:
+cert_inspector/host_vars/delegate.yml
+```bash
+metrics_host_file_path: "/tmp/prom_dhost_certs_metr.txt"
+metrics_host: true
+```
+cert_inspector/host_vars/localhost.yml
+```bash
+metrics_host_file_path: "/tmp/prom_lhost_certs_metr.txt"
+metrics_host: true
+``` 
+Не пустая и обьявленная переменная metrics_host_file_path определяет полный путь до файла с метриками на текущем хосте.
+Файл с метриками будет создаваться и содержать метрики с текущего хоста, которые собираются при metrics_host: true.
+
+5. Проверьте или отредактируйте файлы для переменных хостов для указания директорий где и с какими параметрами искать сертификаты.
+cert_inspector/host_vars/delegate.yml
+```bash
+scan_directories:
+  - path: "/etc"
+    max_size: "-1m"
+    file_type: file
+``` 
+cert_inspector/host_vars/localhost.yml
+```bash
+scan_directories:
+  - path: "/usr"
+    max_size: "-1m"
+    file_type: file
+``` 
+Не пустая переменная scan_directories должна содержать значение path, остальные не указанные значения подставляются из cert_inspector/roles/cert_inspector/defaults/main.yml.
+При metrics_host: true будут создаваться локальные метрики из файлов сертификатов найденных по параметрам из scan_directories.
+
+6. Запустите:
 ```bash
 ansible-playbook playbooks/certificate_scanner.yml -i inventory.yml
+```
+
+7. Проверим результат:
+```bash
+ls /tmp/prom_dhost_certs_metr.txt /tmp/prom_lhost_certs_metr.txt
+/tmp/prom_dhost_certs_metr.txt  /tmp/prom_lhost_certs_metr.txt
+
+cat /tmp/prom_dhost_certs_metr.txt /tmp/prom_lhost_certs_metr.txt
 ```
 
