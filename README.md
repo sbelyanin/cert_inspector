@@ -22,7 +22,7 @@
 - Модуль `community.crypto` (установить через `ansible-galaxy collection install community.crypto`).
 - Python ≥ 3.6.
 - Jinja2 для обработки шаблонов.
-- Nginx для отдачи метрик Prometheus (ребуется только для интеграции с Prometheus).
+- Nginx для отдачи метрик Prometheus (требуется только для интеграции с Prometheus).
 - Доступ к каталогам с сертификатами (права чтения).
 
 ## Установка
