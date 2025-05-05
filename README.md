@@ -23,8 +23,55 @@
 - Доступ к каталогам с сертификатами (права чтения).
 
 ## Установка
-Вручную из репозитория::
+Вручную из репозитория:
 ```bash
 git clone https://github.com/sbelyanin/cert_inspector.git
 cd cert_inspector
 ```
+
+## Пробный запуск 
+1. Для пробноого тестирования будем использовать локальный хост и на него будут две ссылки localhost и delegate.
+Для этого используем конфигурационный файл inventory.yml:
+```bash
+all:
+   hosts:
+       localhost:
+         ansible_host: localhost
+         ansible_user: ansible
+       delegate:
+         ansible_host: localhost
+         ansible_user: ansible
+   children:
+      test:
+         hosts:
+            localhost:
+            delegate:
+```
+
+2. Проверим доступность наших "хостов".
+Предварительно убедитесь что пользователь ansible есть в системе и у него есть необходиме права (для входа в систему через ssh).
+Если аутентификая по паролю:
+```bash
+ansible all -m ping -i inventory.yml --ask-pass
+```
+Если аутентификая по ssh ключу:
+```bash
+ansible all -m ping -i inventory.yml
+```
+
+3. Отредактируйте или создайте простой Playbook playbooks/cert_inspector.yml: 
+```bash
+---
+- name: Certificate inspector
+  hosts: test
+  become: true
+  roles:
+     - role: cert_inspector
+```
+Удалите "become: true" если авторизация на хостах вам позволяет читать файлы с сертификатами без ипспользования sudo или по другим причинам безопастности.
+
+4. Запустите:
+```bash
+ansible-playbook playbooks/certificate_scanner.yml -i inventory.yml
+```
+
