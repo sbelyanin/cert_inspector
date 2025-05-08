@@ -1,33 +1,5 @@
-# Дефолтные значения для сканирования директорий
-# В scan_directories только параметр path обязателен. Остальные значения берутся из дефолтов:
-default_exit_when_absent: false
-default_patterns:
-  - '*.crt'
-  - '*.pem'
-default_excludes: []
-default_max_size: "-1m"
-default_file_type: any
-default_ignore_dir_links: false
-default_recurse: true
-default_scan_depth: 3
-
-# Дефолтные значения для файлов метрик и прав доступа
-# Локальные метрики будут доступны на каждом хосте в указанном пути
-metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
-# Агрегированные метрики будут доступны на хосте-агрегаторе
-metrics_aggr_file_path: "/tmp/prom_aggr_certs_metr.txt"
-metrics_owner: ansible    # Владелец файлов метрик
-metrics_group: ansible    # Группа файлов метрик
-metrics_mode: "0644"      # Права доступа к файлам метрик
-
-# Настройки ролей хостов по умолчанию
-# Хосты участвуют в сканировании сертификатов
-metrics_host: true
-# Хосты не участвуют в агрегации метрик (данные не отправляются на localhost)
-metrics_aggregate: false
-metrics_aggregate_delegate_host: localhost  # Хост для агрегации (требуется metrics_host: true)
-
 # Пример конфигурации сканирования директорий
+# В scan_directories только параметр path обязателен. Не указанные значения берутся из дефолтов.
 scan_directories:
   - path: "/etc"
     patterns:             # Поиск файлов сертификатов
@@ -40,4 +12,35 @@ scan_directories:
     ignore_dir_links: false
     recurse: true         # Рекурсивный поиск
   - path: "/usr"
-    file_type: file       # Сканировать только файлы (по умолчанию)
+    file_type: file
+
+# Дефолтные значения для сканирования директорий (can_directories).
+default_exit_when_absent: false
+default_patterns:
+  - '*.crt'
+  - '*.pem'
+default_excludes: []
+default_max_size: "-1m"
+default_file_type: any
+default_ignore_dir_links: false
+default_recurse: true
+default_scan_depth: 3
+
+# Настройки ролей хостов по умолчанию
+# Хосты учавствуют в сканировании сертификатов и создании локальных метрик
+metrics_host: true
+# Хосты участвуют в агрегации метрик (данные для агрегации отправляются на localhost)
+metrics_aggregate_delegate_host: localhost  # Хост для агрегации локальных метрик с текущего хоста (требуется metrics_host: true).
+
+# Дефолтные значения для файлов метрик
+# Локальные метрики будут доступны на текущем хосте по указанному пути.
+# Если на данном хосте собирались локальные метрики (metrics_host: true).
+metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
+# Агрегированные метрики будут доступны на текущум хосте по указанному пути.
+# Если на данный хост делегировались метрики для агрегации (metrics_aggregate_delegate_host).
+metrics_aggr_file_path: "/tmp/prom_aggr_certs_metr.txt"
+
+# Дефолтные значения прав доступа для файлов метрик
+metrics_owner: ansible    # Владелец файлов метрик
+metrics_group: ansible    # Группа файлов метрик
+metrics_mode: "0644"      # Права доступа к файлам метрик

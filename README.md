@@ -132,6 +132,11 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 ```
 Отрицательное значение метрики `cert_expiry_seconds` означает, что срок действия сертификата истек.
 
+## Роли хостов
+ - **Local Scanner**
+ - **Local Sender**
+ - **Local Exporter**
+ - **gAgregate Exporter**
 
 ## Настройки Nginx для отдачи метрик
 ```nginx

@@ -8,6 +8,5 @@ metrics_host_file_path: "/tmp/prom_lhost_certs_metr.txt"
 metrics_host: true
 
 metrics_aggregate_file_path: "/tmp/prom_aggr_lhost_certs_metr.txt"
-metrics_aggregate: true
 metrics_aggregate_delegate_host: delegate
 
