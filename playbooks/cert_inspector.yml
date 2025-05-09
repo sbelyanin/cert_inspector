@@ -1,6 +1,6 @@
 ---
 - name: Certificate inspector
-  hosts: test
+  hosts: cluster_hosts
   become: true
   roles:
      - role: cert_inspector

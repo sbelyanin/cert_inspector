@@ -38,18 +38,15 @@ cd cert_inspector
 Для этого используем конфигурационный файл `inventory.yml`:
 ```yaml
 all:
-   hosts:
-       localhost:
-         ansible_host: localhost
-         ansible_user: ansible
-       delegate:
-         ansible_host: localhost
-         ansible_user: ansible
    children:
-      test:
+      cluster_hosts:
          hosts:
             localhost:
+               ansible_host: localhost
+               ansible_user: ansible
             delegate:
+               ansible_host: localhost
+               ansible_user: ansible
 ```
 Замените значение переменной `ansible_user` на имя пользователя с доступом к целевым хостам.
 
@@ -67,7 +64,7 @@ ansible all -m ping -i inventory.yml
 3. Проверьте или отредактируйте простой Playbook `playbooks/cert_inspector.yml`: 
 ```yaml
 - name: Certificate inspector
-  hosts: test
+  hosts: cluster_hosts
   become: true
   roles:
      - role: cert_inspector
@@ -147,7 +144,68 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 Передает локальные метрики на хост, выполняющий роль `Aggregate Exporter`.
  - **Local Exporter**: Часть роли `Local Scanner` в которой переменная `metrics_host_file_path` объявлена и не пуста.
 Передает локальные метрики в локальный файл заданный в `metrics_host_file_path`.
- - **Aggregate Exporter**: Забирает локальные метрики с хостов, агрегирует их в единый список и записывает в файл, указанный в `metrics_aggregate_file_path`.
+ - **Aggregate Exporter**: Копирует локальные метрики с хостов, агрегирует их в единый список и записывает в файл, указанный в `metrics_aggregate_file_path`.
+
+## Выбор роли хоста
+### Сценарий 1: Много одинаковых хостов, сертификаты в одних директориях, метрики на тех же хостах
+**Роли хостов**:
+- **Local Scanner + Local Exporter**:
+  На хостах `cluster_hosts` сканируются директория `/etc/ssl/certs`, извлекается данные о сертификатах и сохраняются метрики в локальный файл `tmp/prom_host_certs_metr.txt`.
+**Настройки**:
+- **Инвентори** `inventory.yml`:
+```yaml
+all:
+   children:
+      cluster_hosts:
+         hosts:
+             host1:
+             host2:
+             host3:
+```
+- **Групповые переменные** `group_vars/cluster_hosts.yml`:
+```yaml
+metrics_host: true
+scan_directories:
+  - path: "/etc/ssl/certs"
+    max_depth: 3
+    file_type: file
+metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
+```
+
+### Сценарий 2: Много одинаковых хостов, сертификаты в одних директориях, метрики на выделеннй хост
+**Роли хостов**:
+- **Local Scanner + Local Exporter**:
+  На хостах `cluster_hosts` сканируются директория `/etc/ssl/certs`, извлекается данные о сертификатах и передаются метрики на хост `metrics_host` для агрегации.
+- **Aggregate Exporter**:
+  Хост `metrics_host` копирует локальные метрики с хостов `cluster_hosts`, агрегирует их в единый список и записывает в файл `/tmp/prom_host_certs_metr.txt`.
+**Настройки**:
+- **Инвентори** `inventory.yml`:
+```yaml
+all:
+   children:
+      cluster_hosts:
+         hosts:
+            host1:
+            host2:
+            host3:
+      exporter_hosts:
+         hosts:
+            metrics_host:
+```
+- **Групповые переменные**
+Для сканеров `group_vars/cluster_hosts.yml`:
+```yaml
+metrics_host: true
+scan_directories:
+  - path: "/etc/ssl/certs"
+    max_depth: 3
+    file_type: file
+metrics_aggregate_delegate_host: "metrics_host"
+```
+Для экспортера `group_vars/exporter_hosts.yml`:
+```yaml
+metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
+```
 
 ## Настройки Nginx для экспорта метрик
 ```nginx
@@ -156,4 +214,3 @@ location /metrics {
     try_files $uri prom_lhost_certs_metr.txt prom_dhost_certs_metr.txt =404;
 }
 ```
-

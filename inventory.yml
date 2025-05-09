@@ -1,13 +1,10 @@
 all:
-   hosts:
-       localhost:
-         ansible_host: localhost
-         ansible_user: ansible
-       delegate:
-         ansible_host: localhost
-         ansible_user: ansible
    children:
-      test:
+      cluster_hosts:
          hosts:
             localhost:
+               ansible_host: localhost
+               ansible_user: ansible
             delegate:
+               ansible_host: localhost
+               ansible_user: ansible
