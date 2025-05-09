@@ -130,12 +130,12 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 
 ## Роли хостов
  - **Local Scanner**: Сканирует локальные директории, находит файлы с сертификатами и создает на их основе локальный список для метрик.
-### Переменные:
+**Переменные:**
 `metrics_host:` объявлена и её значение равно `true`.
 Задает одну из ролей хоста -`Local Scanner`.
 `scan_directories` объявлена и в списке присутствует хотя бы один не пустой элемент `path`.
 Задает параметры сканирования директорий и нахождения файлов.
-### Одна или обе переменных:
+** Одна или обе переменных:**
 `metrics_host_file_path` объявлена и не пуста.
 Задает полный путь до файла куда будут записываться метрики с локального хоста.
 `metrics_aggregate_delegate_host` объявлена и не пуста.
@@ -171,6 +171,17 @@ scan_directories:
     file_type: file
 metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
 ```
+- **Plabook и запуск** `playbooks/cert_inspector.yml`:
+```yaml
+- name: Certificate inspector
+  hosts: cluster_hosts
+  become: true
+  roles:
+     - role: cert_inspector
+```
+```bash
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
+```
 
 ### Сценарий 2: Много одинаковых хостов, сертификаты в одних директориях, метрики на выделеннй хост
 **Роли хостов**:
@@ -188,11 +199,10 @@ all:
             host1:
             host2:
             host3:
-      exporter_hosts:
-         hosts:
             metrics_host:
 ```
 - **Групповые переменные**
+Хостовые переменные в `host_vars/` имеют больший приоритет, чем групповые в `group_vars/`. Поэтому для всех хостов `cluster_hosts` назначаем переменные для группы, а для `metrics_host` отдельно переменные для хоста.
 Для сканеров `group_vars/cluster_hosts.yml`:
 ```yaml
 metrics_host: true
@@ -202,9 +212,22 @@ scan_directories:
     file_type: file
 metrics_aggregate_delegate_host: "metrics_host"
 ```
-Для экспортера `group_vars/exporter_hosts.yml`:
+- **Хостовые переменные**
+Для экспортера `host_vars/metrics_host.yml`:
 ```yaml
+metrics_host: false
 metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
+```
+- **Plabook и запуск** `playbooks/cert_inspector.yml`:
+```yaml
+- name: Certificate inspector
+  hosts: cluster_hosts
+  become: true
+  roles:
+     - role: cert_inspector
+```
+```bash
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 ```
 
 ## Настройки Nginx для экспорта метрик
