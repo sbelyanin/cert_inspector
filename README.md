@@ -128,23 +128,11 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 ```
 Отрицательное значение метрики `cert_expiry_seconds` означает, что срок действия сертификата истек.
 
-## Роли хостов
- - **Local Scanner**: Сканирует локальные директории, находит файлы с сертификатами и создает на их основе локальный список для метрик.
-#### Переменные:
-`metrics_host:` объявлена и её значение равно `true`.
-Задает одну из ролей хоста -`Local Scanner`.
-`scan_directories` объявлена и в списке присутствует хотя бы один не пустой элемент `path`.
-Задает параметры сканирования директорий и нахождения файлов.
-#### Одна или обе переменных:
-`metrics_host_file_path` объявлена и не пуста.
-Задает полный путь до файла куда будут записываться метрики с локального хоста.
-`metrics_aggregate_delegate_host` объявлена и не пуста.
-Задает имя хоста из инвентори, который будет агрегировать локальные метрики с локального хоста.
- - **Local Sender**: Часть роли `Local Scanner` в которой переменная `metrics_aggregate_delegate_host` объявлена и не пуста.
-Передает локальные метрики на хост, выполняющий роль `Aggregate Exporter`.
- - **Local Exporter**: Часть роли `Local Scanner` в которой переменная `metrics_host_file_path` объявлена и не пуста.
-Передает локальные метрики в локальный файл заданный в `metrics_host_file_path`.
- - **Aggregate Exporter**: Копирует локальные метрики с хостов, агрегирует их в единый список и записывает в файл, указанный в `metrics_aggregate_file_path`.
+## [Роли хостов](./docs/guide.md#роли-хостов)
+ - **Local Scanner**
+ - **Local Sender**
+ - **Local Exporter**
+ - **Aggregate Exporter**
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
 
