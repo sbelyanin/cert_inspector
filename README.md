@@ -136,7 +136,7 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
  - **[Таблица приоритетов](./docs/variable-precedence.md#таблица-приоритетов)**
- - **[](./docs/variable-precedence.md#)**
+ - **[Примеры установки значений](./docs/variable-precedence.md#примеры-установки)**
  - **[](./docs/variable-precedence.md#)**
  - **[](./docs/variable-precedence.md#)**
 
