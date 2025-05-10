@@ -1,3 +1,5 @@
+## Выбор роли хоста
+
 ### Сценарий 3: Много хостов, сертификаты в разных директориях, гибридная агрегация метрик
 **Окружение**:
 - 6 хостов (`host1`-`host6`), объединенных в группу `cluster_hosts`.
@@ -42,8 +44,7 @@ metrics_aggregate_delegate_host: "host5"  # Отправка метрик на h
 scan_directories:
   - path: "/etc/host1_certs"  # Уникальная директория
 ```
-Для `host2` `(host_vars/host2.yml`:
-
+Для `host2` `host_vars/host2.yml`:
 ````yaml
 metrics_aggregate_delegate_host: "host5"  # Отправка на host5
 scan_directories:
