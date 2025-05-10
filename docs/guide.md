@@ -1,4 +1,5 @@
 ## Выбор роли хоста
+#### Хостовые переменные в `host_vars/` имеют больший приоритет, чем групповые в `group_vars/`. Это надо учитывать при настройке окружения.
 
 ### Сценарий 1: 
 #### Много одинаковых хостов, сертификаты в одних директориях, метрики на тех же хостах.
@@ -57,8 +58,7 @@ all:
             metrics_host:
 ```
 - **Групповые переменные**
-Хостовые переменные в `host_vars/` имеют больший приоритет, чем групповые в `group_vars/`. Поэтому для всех хостов `cluster_hosts` назначаем переменные для группы, а для `metrics_host` отдельно переменные для хоста.
-Для сканеров `group_vars/cluster_hosts.yml`:
+#### Для сканеров `group_vars/cluster_hosts.yml`:
 ```yaml
 metrics_host: true
 scan_directories:
@@ -68,7 +68,7 @@ scan_directories:
 metrics_aggregate_delegate_host: "metrics_host"
 ```
 - **Хостовые переменные**
-Для экспортера `host_vars/metrics_host.yml`:
+#### Для экспортера `host_vars/metrics_host.yml`:
 ```yaml
 metrics_host: false
 metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
@@ -123,41 +123,40 @@ all:
 metrics_host: true  # Все хосты по умолчанию сканируют сертификаты
 ```
 - **Хостовые переменные**:
-Для `host1` `host_vars/host1.yml`:
+#### Для `host1` `host_vars/host1.yml`:
 ```yaml
 metrics_host_file_path: "/tmp/host1_certs_metrics.txt"  # Локальный экспорт
 metrics_aggregate_delegate_host: "host5"  # Отправка метрик на host5
 scan_directories:
   - path: "/etc/host1_certs"  # Уникальная директория
 ```
-Для `host2` `host_vars/host2.yml`:
-````yaml
+#### Для `host2` `host_vars/host2.yml`:
+```yaml
 metrics_aggregate_delegate_host: "host5"  # Отправка на host5
 scan_directories:
   - path: "/opt/certs"
 ```
-Для `host3` `host_vars/host3.yml`:
+#### Для `host3` `host_vars/host3.yml`:
 ```yaml
 metrics_host_file_path: "/tmp/host3_certs_metrics.txt"  # Локальный экспорт
 metrics_aggregate_delegate_host: "host6"  # Отправка на host6
 scan_directories:
   - path: "/var/ssl"
 ```
-Для `host4` `host_vars/host4.yml`:
+#### Для `host4` `host_vars/host4.yml`:
 ```yaml
 metrics_aggregate_delegate_host: "host6"  # Отправка на host6
 scan_directories:
   - path: "/home/user/certs"
 ```
-Для `host5` `host_vars/host5.yml`:
+#### Для `host5` `host_vars/host5.yml`:
 ```yaml
 metrics_aggregate_file_path: "/tmp/agg_host5_metrics.txt"  # Агрегированные метрики
 metrics_aggregate_delegate_host: "host6"  # Отправка на host6
 scan_directories:
   - path: "/etc/host5_certs"  # Уникальная директория
-
 ```
-Для `host6` `host_vars/host6.yml`:
+#### Для `host6` `host_vars/host6.yml`:
 ```yaml
 metrics_aggregate_file_path: "/tmp/agg_host6_metrics.txt"  # Агрегированные метрики
 metrics_aggregate_delegate_host: "host5"  # Отправка на host5
@@ -175,4 +174,3 @@ scan_directories:
 ```bash
 ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 ```
-

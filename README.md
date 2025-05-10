@@ -148,7 +148,7 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
 
-## [Выбор роли хоста](./docs/guide.md#Выбор)
+## [Выбор роли хоста](./docs/guide.md#выбор-роли-хоста)
 - *[Сценарий 1](./docs/guide.md#сценарий-1)*
 Много одинаковых хостов, сертификаты в одних директориях, метрики на тех же хостах
 - *[Сценарий 2](./docs/guide.md#сценарий-2)*
