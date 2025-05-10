@@ -129,10 +129,10 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 Отрицательное значение метрики `cert_expiry_seconds` означает, что срок действия сертификата истек.
 
 ## [Роли хостов](./docs/guide.md#роли-хостов)
- - **Local Scanner**
- - **Local Sender**
- - **Local Exporter**
- - **Aggregate Exporter**
+ - **[Local Scanner](./docs/guide.md#local-scanner)**
+ - **[Local Sender](./docs/guide.md#local-sender)**
+ - **[Local Exporter](./docs/guide.md#local-exporter)**
+ - **[Aggregate Exporter](./docs/guide.md#aggregate-exporter)**
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
 
