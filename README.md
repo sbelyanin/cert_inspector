@@ -173,7 +173,7 @@ scan_directories:
     file_type: file
 metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
 ```
-- **Plabook и запуск** `playbooks/cert_inspector.yml`:
+- **Playbook и запуск** `playbooks/cert_inspector.yml`:
 ```yaml
 - name: Certificate inspector
   hosts: cluster_hosts
@@ -220,7 +220,7 @@ metrics_aggregate_delegate_host: "metrics_host"
 metrics_host: false
 metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
 ```
-- **Plabook и запуск** `playbooks/cert_inspector.yml`:
+- **Playbook и запуск** `playbooks/cert_inspector.yml`:
 ```yaml
 - name: Certificate inspector
   hosts: cluster_hosts
