@@ -135,10 +135,10 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
  - **[Aggregate Exporter](./docs/guide.md#aggregate-exporter)**
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
- - **[Таблица приоритетов](./docs/variable-precedence.md#таблица-приоритетов)**
- - **[Примеры установки значений](./docs/variable-precedence.md#примеры-установки)**
- - **[](./docs/variable-precedence.md#)**
- - **[](./docs/variable-precedence.md#)**
+ - **[Таблица приоритетов](./docs/variable-precedence.md#таблица)**
+ - **[Примеры установки значений](./docs/variable-precedence.md#примеры)**
+ - **[Ключевые моменты](./docs/variable-precedence.md#ключевые)**
+ - **[Как проверить приоритеты](./docs/variable-precedence.md#как-проверить)**
 
 ## [Выбор роли хоста](./docs/guide.md#выбор-роли-хоста)
 - *[Сценарий 1](./docs/guide.md#сценарий-1)*
