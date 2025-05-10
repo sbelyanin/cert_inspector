@@ -1,5 +1,88 @@
 ## Выбор роли хоста
 
+### Сценарий 1: Много одинаковых хостов, сертификаты в одних директориях, метрики на тех же хостах
+**Роли хостов**:
+- **Local Scanner + Local Exporter**:
+  На хостах `cluster_hosts` сканируются директория `/etc/ssl/certs`, извлекается данные о сертификатах и сохраняются метрики в локальный файл `tmp/prom_host_certs_metr.txt`.
+**Настройки**:
+- **Инвентори** `inventory.yml`:
+```yaml
+all:
+   children:
+      cluster_hosts:
+         hosts:
+             host1:
+             host2:
+             host3:
+```
+- **Групповые переменные** `group_vars/cluster_hosts.yml`:
+```yaml
+metrics_host: true
+scan_directories:
+  - path: "/etc/ssl/certs"
+    max_depth: 3
+    file_type: file
+metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
+```
+- **Playbook и запуск** `playbooks/cert_inspector.yml`:
+```yaml
+- name: Certificate inspector
+  hosts: cluster_hosts
+  become: true
+  roles:
+     - role: cert_inspector
+```
+```bash
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
+```
+
+### Сценарий 2: Много одинаковых хостов, сертификаты в одних директориях, метрики на выделеннй хост
+**Роли хостов**:
+- **Local Scanner + Local Exporter**:
+  На хостах `cluster_hosts` сканируются директория `/etc/ssl/certs`, извлекается данные о сертификатах и передаются метрики на хост `metrics_host` для агрегации.
+- **Aggregate Exporter**:
+  Хост `metrics_host` копирует локальные метрики с хостов `cluster_hosts`, агрегирует их в единый список и записывает в файл `/tmp/prom_host_certs_metr.txt`.
+**Настройки**:
+- **Инвентори** `inventory.yml`:
+```yaml
+all:
+   children:
+      cluster_hosts:
+         hosts:
+            host1:
+            host2:
+            host3:
+            metrics_host:
+```
+- **Групповые переменные**
+Хостовые переменные в `host_vars/` имеют больший приоритет, чем групповые в `group_vars/`. Поэтому для всех хостов `cluster_hosts` назначаем переменные для группы, а для `metrics_host` отдельно переменные для хоста.
+Для сканеров `group_vars/cluster_hosts.yml`:
+```yaml
+metrics_host: true
+scan_directories:
+  - path: "/etc/ssl/certs"
+    max_depth: 3
+    file_type: file
+metrics_aggregate_delegate_host: "metrics_host"
+```
+- **Хостовые переменные**
+Для экспортера `host_vars/metrics_host.yml`:
+```yaml
+metrics_host: false
+metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
+```
+- **Playbook и запуск** `playbooks/cert_inspector.yml`:
+```yaml
+- name: Certificate inspector
+  hosts: cluster_hosts
+  become: true
+  roles:
+     - role: cert_inspector
+```
+```bash
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
+```
+
 ### Сценарий 3: Много хостов, сертификаты в разных директориях, гибридная агрегация метрик
 **Окружение**:
 - 6 хостов (`host1`-`host6`), объединенных в группу `cluster_hosts`.
