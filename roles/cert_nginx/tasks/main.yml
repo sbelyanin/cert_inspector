@@ -23,6 +23,18 @@
         group: root
         mode: 0644
       notify: Reload Nginx
+
+    - name: Enable Nginx config (multi-OS support)
+      ansible.builtin.file:
+        src: "{{ nginx_conf_path }}/metrics.conf"
+        dest: "{{ (ansible_os_family == 'Debian') | ternary('/etc/nginx/sites-enabled/metrics.conf', '/etc/nginx/conf.d/metrics.conf') }}"
+        state: "{{ 'link' if ansible_os_family == 'Debian' else 'hard' }}"
+      notify: Reload Nginx
+      when:
+        - nginx_conf_path is defined
+        - (ansible_os_family == 'Debian' and nginx_conf_path == '/etc/nginx/sites-available') or
+          (ansible_os_family == 'RedHat' and nginx_conf_path == '/etc/nginx/conf.d')
   become: yes
   when:
-    - ((metrics_host_file_path is defined) and (metrics_host_file_path | string != "")) or ((metrics_aggregate_delegate_host is defined) and (metrics_aggregate_delegate_host | string != ""))
+    - (metrics_host_file_path | default('') | trim | length > 0) or
+      (metrics_aggregate_delegate_host | default('') | trim | length > 0)

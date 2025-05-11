@@ -7,7 +7,4 @@ aggregated_metrics_port: 8881
 # Дистрибутив-специфичные переменные
 nginx_package: "nginx"
 nginx_service_name: "nginx"
-# Для CentOS
-# nginx_conf_path: "/etc/nginx/conf.d"
-# Для Ubuntu:
-nginx_conf_path: "/etc/nginx/sites-available"
+nginx_conf_path: "{{ (ansible_os_family == 'Debian') | ternary('/etc/nginx/sites-available', '/etc/nginx/conf.d') }}"
