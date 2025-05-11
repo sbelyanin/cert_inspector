@@ -65,6 +65,15 @@
     - metrics_aggregate_file_path | string != ""
 
 - block:
+    - name: Create aggregated directories and set permissions
+      ansible.builtin.file:
+        path: "{{ metrics_aggregate_file_path | dirname }}"
+        state: directory
+        recurse: yes
+        owner: "{{ metrics_owner }}"
+        group: "{{ metrics_group }}"
+        mode: "{{ metrics_dir_mode }}"
+
     - name: Get current time in timestamp (aggregate)
       command: date +%s
       register: current_time
@@ -76,7 +85,7 @@
         dest: "{{ metrics_aggregate_file_path }}"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
-        mode: "{{ metrics_mode }}"
+        mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ cert_info_all }}"
   when:
@@ -86,6 +95,15 @@
     - metrics_aggregate_file_path | string != ""
 
 - block:
+    - name: Create host directories and set permissions
+      ansible.builtin.file:
+        path: "{{ metrics_host_file_path | dirname }}"
+        state: directory
+        recurse: yes
+        owner: "{{ metrics_owner }}"
+        group: "{{ metrics_group }}"
+        mode: "{{ metrics_dir_mode }}"
+
     - name: Get current time in timestamp (host)
       command: date +%s
       register: current_time
@@ -97,7 +115,7 @@
         dest: "{{ metrics_host_file_path }}"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
-        mode: "{{ metrics_mode }}"
+        mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ cert_info_results.results }}"
   when:

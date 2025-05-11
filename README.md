@@ -36,7 +36,7 @@ cd cert_inspector
 - **[Проверка доступности](./docs/guide.md#проверим-доступность)**
 - **[Простой Playbook](./docs/guide.md#простой-playbook)**
 - **[Файл с метриками](./docs/guide.md#файл-с-метриками)**
-- **[Переменнык хостов](./docs/guide.md#переменных-хостов)**
+- **[Переменные хостов](./docs/guide.md#переменных-хостов)**
 - **[Запуск playbook](./docs/guide.md#запустите-playbook)**
 - **[Проверка результата](./docs/guide.md#проверим-результат)**
 
@@ -62,8 +62,36 @@ cd cert_inspector
 
 ## Настройки Nginx для экспорта метрик
 ```nginx
-location /metrics {
-    alias /tmp;
-    try_files $uri prom_lhost_certs_metr.txt prom_dhost_certs_metr.txt =404;
+server {
+    listen 8880;
+    server_name _;
+
+    location /metrics {
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        alias /var/lib/metrics/prom_dhost_certs_metr.txt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 404;
+    }
+}
+server {
+    listen 8881;
+    server_name _;
+
+    location /metrics {
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        alias /var/lib/metrics/prom_aggr_dhost_certs_metr.txt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 404;
+    }
 }
 ```

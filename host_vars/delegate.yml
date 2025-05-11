@@ -3,8 +3,8 @@ scan_directories:
     max_size: "-1m"
     file_type: file
 
-metrics_host_file_path: "/tmp/prom_dhost_certs_metr.txt"
+metrics_host_file_path: "/var/lib/metrics/prom_dhost_certs_metr.txt"
 metrics_host: true
 
-metrics_aggregate_file_path: "/tmp/prom_aggr_dhost_certs_metr.txt"
-metrics_aggregate_delegate_host: delegate
+metrics_aggregate_file_path: "/var/lib/metrics/prom_aggr_dhost_certs_metr.txt"
+metrics_aggregate_delegate_host: localhost

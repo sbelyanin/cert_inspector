@@ -35,12 +35,13 @@ metrics_aggregate_delegate_host: localhost  # Хост для агрегации
 # Дефолтные значения для файлов метрик
 # Локальные метрики будут доступны на текущем хосте по указанному пути.
 # Если на данном хосте собирались локальные метрики (metrics_host: true).
-metrics_host_file_path: "/tmp/prom_host_certs_metr.txt"
+metrics_host_file_path: "/var/lib/metrics/prom_host_certs_metr.txt"
 # Агрегированные метрики будут доступны на текущум хосте по указанному пути.
 # Если на данный хост делегировались метрики для агрегации (metrics_aggregate_delegate_host).
-metrics_aggr_file_path: "/tmp/prom_aggr_certs_metr.txt"
+metrics_aggr_file_path: "/var/lib/metrics/prom_aggr_certs_metr.txt"
 
 # Дефолтные значения прав доступа для файлов метрик
 metrics_owner: ansible    # Владелец файлов метрик
 metrics_group: ansible    # Группа файлов метрик
-metrics_mode: "0644"      # Права доступа к файлам метрик
+metrics_file_mode: "0644"      # Права доступа к файлам метрик
+metrics_dir_mode: "0755"      # Права доступа к директории метрик

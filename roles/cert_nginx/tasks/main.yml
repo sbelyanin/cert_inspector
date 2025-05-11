@@ -1,0 +1,28 @@
+---
+- block:
+    - name: Install Nginx/Angie
+      ansible.builtin.package:
+        name: "{{ nginx_package }}"
+        state: present
+
+    - name: Generate .htpasswd file
+      community.general.htpasswd:
+        path: /etc/nginx/.htpasswd
+        name: "{{ auth_user }}"
+        password: "{{ auth_password }}"
+        state: present
+        owner: root
+        group: www-data
+        mode: '0640'
+
+    - name: Deploy Nginx config
+      ansible.builtin.template:
+        src: metrics.conf.j2
+        dest: "{{ nginx_conf_path }}/metrics.conf"
+        owner: root
+        group: root
+        mode: 0644
+      notify: Reload Nginx
+  become: yes
+  when:
+    - ((metrics_host_file_path is defined) and (metrics_host_file_path | string != "")) or ((metrics_aggregate_delegate_host is defined) and (metrics_aggregate_delegate_host | string != ""))

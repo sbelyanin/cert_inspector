@@ -1,0 +1,13 @@
+---
+auth_user: "metrics_user"
+auth_password: "secure_password"
+local_metrics_port: 8880
+aggregated_metrics_port: 8881
+
+# Дистрибутив-специфичные переменные
+nginx_package: "nginx"
+nginx_service_name: "nginx"
+# Для CentOS
+# nginx_conf_path: "/etc/nginx/conf.d"
+# Для Ubuntu:
+nginx_conf_path: "/etc/nginx/sites-available"
