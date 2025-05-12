@@ -1,4 +1,35 @@
 ---
+- name: Set nginx_conf_path with fallback
+  ansible.builtin.set_fact:
+    nginx_conf_path: >-
+      {{
+        "/etc/nginx/sites-available" if ansible_os_family == "Debian"
+        else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
+        else "/etc/nginx"
+      }}
+  when: nginx_conf_path is not defined
+
+- name: Set nginx_enabled_conf_path with fallback
+  ansible.builtin.set_fact:
+    nginx_enabled_conf_path: >-
+      {{
+        "/etc/nginx/sites-enabled" if ansible_os_family == "Debian"
+        else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
+        else "/etc/nginx"
+      }}
+  when: nginx_enabled_conf_path is not defined
+
+- name: Set nginx_link_conf_type with fallback
+  ansible.builtin.set_fact:
+    nginx_link_conf_type: >-
+      {{
+        "link" if ansible_os_family == "Debian"
+        else "hard" if ansible_os_family == "RedHat"
+        else "hard"
+      }}
+  when: nginx_link_conf_type is not defined
+
+
 - block:
     - name: Install Nginx/Angie
       ansible.builtin.package:
@@ -15,26 +46,48 @@
         group: www-data
         mode: '0640'
 
-    - name: Deploy Nginx config
+    - name: Deploy host metrics Nginx config
       ansible.builtin.template:
-        src: metrics.conf.j2
-        dest: "{{ nginx_conf_path }}/metrics.conf"
+        src: host_metrics.conf.j2
+        dest: "{{ nginx_conf_path }}/host_metrics.conf"
         owner: root
         group: root
         mode: 0644
       notify: Reload Nginx
+      when:
+        - local_exporter | default(false)
 
-    - name: Enable Nginx config (multi-OS support)
-      ansible.builtin.file:
-        src: "{{ nginx_conf_path }}/metrics.conf"
-        dest: "{{ (ansible_os_family == 'Debian') | ternary('/etc/nginx/sites-enabled/metrics.conf', '/etc/nginx/conf.d/metrics.conf') }}"
-        state: "{{ 'link' if ansible_os_family == 'Debian' else 'hard' }}"
+    - name: Deploy aggregate metrics Nginx config
+      ansible.builtin.template:
+        src: aggregate_metrics.conf.j2
+        dest: "{{ nginx_conf_path }}/aggregate_metrics.conf"
+        owner: root
+        group: root
+        mode: 0644
       notify: Reload Nginx
       when:
-        - nginx_conf_path is defined
-        - (ansible_os_family == 'Debian' and nginx_conf_path == '/etc/nginx/sites-available') or
-          (ansible_os_family == 'RedHat' and nginx_conf_path == '/etc/nginx/conf.d')
+        - aggregate_exporter | default(false)
+
+    - name: Enable host metrics Nginx config
+      ansible.builtin.file:
+        src: "{{ nginx_conf_path }}/host_metrics.conf"
+        dest: "{{ nginx_enabled_conf_path }}/host_metrics.conf"
+        state: "{{ nginx_link_conf_type }}"
+      notify: Reload Nginx
+      when:
+        - local_exporter | default(false)
+
+    - name: Enable aggregate metrics Nginx config
+      ansible.builtin.file:
+        src: "{{ nginx_conf_path }}/aggregate_metrics.conf"
+        dest: "{{ nginx_enabled_conf_path }}/aggregate_metrics.conf"
+        state: "{{ nginx_link_conf_type }}"
+      notify: Reload Nginx
+      when:
+        - aggregate_exporter | default(false)
   become: yes
   when:
-    - (metrics_host_file_path | default('') | trim | length > 0) or
-      (metrics_aggregate_delegate_host | default('') | trim | length > 0)
+    - nginx_conf_path | default('') | trim | length > 0
+    - nginx_enabled_conf_path | default('') | trim | length > 0
+    - nginx_link_conf_type | default('') | trim | length > 0
+    - (local_exporter | default(false)) or (aggregate_exporter | default(false))

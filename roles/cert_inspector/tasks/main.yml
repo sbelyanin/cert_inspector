@@ -1,4 +1,12 @@
 ---
+- name: Set Local Scanner true if all conditions met
+  set_fact:
+    local_scanner: true
+  when:
+    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+    - (metrics_host_file_path | default('') | trim | length > 0) or
+      (metrics_aggregate_delegate_host | default('') | trim | length > 0)
+
 - block:
     - name: Check if directories exist and are readable
       ansible.builtin.stat:
@@ -42,23 +50,47 @@
       register: cert_info_results
       ignore_errors: yes
   when:
+    - local_scanner | default(false)
+
+- name: Set Local Exporter true if all conditions met
+  set_fact:
+    local_exporter: true
+  when:
     - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
-    - (metrics_host_file_path | default('') | trim | length > 0) or
-      (metrics_aggregate_delegate_host | default('') | trim | length > 0)
+    - cert_info_results.results | default('') | trim | length > 0
+    - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
+    - metrics_host_file_path | default('') | trim | length > 0
+
+- name: Set Local Sender true if all conditions met
+  set_fact:
+    local_sender: true
+  when:
+    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+    - cert_info_results.results | default('') | trim | length > 0
+    - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
+    - metrics_aggregate_delegate_host | default('') | trim | length > 0
+
 
 - name: Aggregate certificate info from hosts
   ansible.builtin.set_fact:
     cert_info_all: >-
       {{
         groups['all'] | map('extract', hostvars)
+        | selectattr('local_sender', 'defined')
+        | selectattr('local_sender', 'eq', true)
         | selectattr('metrics_aggregate_delegate_host', '==', inventory_hostname)
-        | selectattr('cert_info_results', 'defined')
-        | selectattr('cert_info_results.results', 'defined')
-        | selectattr('cert_info_results.results', 'any')
         | map(attribute='cert_info_results.results')
         | sum(start=[])
       }}
   when:
+    - metrics_aggregate_file_path | default('') | trim | length > 0
+
+- name: Set Aggregate Exporter true if all conditions met
+  set_fact:
+    aggregate_exporter: true
+  when:
+    - cert_info_all | default('') | trim | length > 0
+    - (cert_info_all | selectattr('not_after', 'defined') | list | length) > 0
     - metrics_aggregate_file_path | default('') | trim | length > 0
 
 - block:
@@ -86,10 +118,7 @@
       vars:
         cert_data: "{{ cert_info_all }}"
   when:
-    - cert_info_all | default('') | trim | length > 0
-    - (cert_info_all | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_aggregate_file_path | default('') | trim | length > 0
-
+    - aggregate_exporter | default(false)
 
 - block:
     - name: Create host directories and set permissions
@@ -116,6 +145,4 @@
       vars:
         cert_data: "{{ cert_info_results.results }}"
   when:
-    - cert_info_results.results | default('') | trim | length > 0
-    - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_host_file_path | default('') | trim | length > 0
+    - local_exporter | default(false)
