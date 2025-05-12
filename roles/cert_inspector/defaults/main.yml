@@ -1,20 +1,24 @@
-# Пример конфигурации сканирования директорий
-# В scan_directories только параметр path обязателен. Не указанные значения берутся из дефолтов.
-scan_directories:
-  - path: "/etc"
-    patterns:             # Поиск файлов сертификатов
-      - '*.pem'
-      - '*.crt'
-    excludes: []          # Исключения (пустой список)
-    file_type: file       # Тип сканируемых объектов
-    max_size: "-1m"       # Размер файла меньше 1Mb
-    depth: 10             # Глубина рекурсии (переопределяет default_scan_depth)
-    ignore_dir_links: false
-    recurse: true         # Рекурсивный поиск
-  - path: "/usr"
-    file_type: file
+# Настройки ролей хостов по умолчанию
+# Хосты по умолчанию не учавствуют в сканировании сертификатов и создании локальных метрик,
+# переменная `scan_directories` по умолчанию не определенна.
 
-# Дефолтные значения для сканирования директорий (can_directories).
+# Пример конфигурации сканирования директорий
+# В `scan_directories` только параметр `path` обязателен. Не указанные значения берутся из дефолтов.
+#scan_directories:
+#  - path: "/etc"             # Искать файлы в директории `/etc`. Обязательный параметр.
+#    patterns:                # Поиск файлов по маске
+#      - '*.pem'
+#      - '*.crt'
+#    excludes: []             # Исключения (пустой список)
+#    file_type: file          # Тип сканируемых объектов
+#    max_size: "-1m"          # Размер файла меньше 1Mb
+#    depth: 10                # Глубина рекурсии
+#    ignore_dir_links: false  # Не переходить в директории линки
+#    recurse: true            # Рекурсивный поиск
+#    exit_when_absent: true   # Прерывать playbook в случае недоступности директории `path: "/etc"`.
+#  - path: "/usr"             # Искать файлы в директории `/usr`. Обязательный параметр.
+
+# Дефолтные значения для сканирования директорий (`scan_directories`).
 default_exit_when_absent: false
 default_patterns:
   - '*.crt'
@@ -26,22 +30,25 @@ default_ignore_dir_links: false
 default_recurse: true
 default_scan_depth: 3
 
-# Настройки ролей хостов по умолчанию
-# Хосты учавствуют в сканировании сертификатов и создании локальных метрик
-metrics_host: true
-# Хосты участвуют в агрегации метрик (данные для агрегации отправляются на localhost)
-metrics_aggregate_delegate_host: localhost  # Хост для агрегации локальных метрик с текущего хоста (требуется metrics_host: true).
+# Хосты по умолчанию не участвуют в агрегации метрик (не отправляются на хост агрегатор).
+# Значение переменной `metrics_aggregate_delegate_host` указывает на хост агрегатор из инвентори.
+# Пример:
+# metrics_aggregate_delegate_host: exporter
+# Текущий хост с собранными локальными метрикамии (определена и не пуста scan_directories) пересылает их на хост `exporter`.
+
 
 # Дефолтные значения для файлов метрик
 # Локальные метрики будут доступны на текущем хосте по указанному пути.
-# Если на данном хосте собирались локальные метрики (metrics_host: true).
-metrics_host_file_path: "/var/lib/metrics/prom_host_certs_metr.txt"
-# Агрегированные метрики будут доступны на текущум хосте по указанному пути.
-# Если на данный хост делегировались метрики для агрегации (metrics_aggregate_delegate_host).
-metrics_aggr_file_path: "/var/lib/metrics/prom_aggr_certs_metr.txt"
+# Если на данном хосте собирались локальные метрики (определена и не пуста `scan_directories`).
+metrics_host_file_path: "/var/lib/metrics/prom_{{ inventory_hostname }}_certs.txt"
+# Агрегированные метрики будут доступны на текущем хосте по указанному пути.
+# Если на данный хост делегировались метрики для агрегации 
+# с хостов где  переменная `metrics_aggregate_delegate_host` указывала на текущий хост.
+metrics_aggr_file_path: "/var/lib/metrics/prom_aggr_{{ inventory_hostname }}_certs.txt"
+# `inventory_hostname` — имя хоста из инвентаря Ansible.
 
-# Дефолтные значения прав доступа для файлов метрик
-metrics_owner: ansible    # Владелец файлов метрик
-metrics_group: ansible    # Группа файлов метрик
+# Дефолтные значения прав доступа для файлов и директорий метрик
+metrics_owner: "ansible"    # Владелец файлов метрик
+metrics_group: "ansible"    # Группа файлов метрик
 metrics_file_mode: "0644"      # Права доступа к файлам метрик
-metrics_dir_mode: "0755"      # Права доступа к директории метрик
+metrics_dir_mode: "0755"      # Права доступа к директориям метрик

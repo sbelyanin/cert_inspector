@@ -42,9 +42,9 @@
       register: cert_info_results
       ignore_errors: yes
   when:
-    - metrics_host | default(false)
-    - (scan_directories is defined) and (scan_directories | string != "")
-    - ((metrics_host_file_path is defined) and (metrics_host_file_path | string != "")) or ((metrics_aggregate_delegate_host is defined) and (metrics_aggregate_delegate_host | string != ""))
+    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+    - (metrics_host_file_path | default('') | trim | length > 0) or
+      (metrics_aggregate_delegate_host | default('') | trim | length > 0)
 
 - name: Aggregate certificate info from hosts
   ansible.builtin.set_fact:
@@ -52,8 +52,6 @@
       {{
         groups['all'] | map('extract', hostvars)
         | selectattr('metrics_aggregate_delegate_host', '==', inventory_hostname)
-        | selectattr('metrics_host', 'defined')
-        | selectattr('metrics_host', 'truthy')
         | selectattr('cert_info_results', 'defined')
         | selectattr('cert_info_results.results', 'defined')
         | selectattr('cert_info_results.results', 'any')
@@ -61,8 +59,7 @@
         | sum(start=[])
       }}
   when:
-    - metrics_aggregate_file_path is defined
-    - metrics_aggregate_file_path | string != ""
+    - metrics_aggregate_file_path | default('') | trim | length > 0
 
 - block:
     - name: Create aggregated directories and set permissions
@@ -89,10 +86,10 @@
       vars:
         cert_data: "{{ cert_info_all }}"
   when:
-    - cert_info_all is defined
+    - cert_info_all | default('') | trim | length > 0
     - (cert_info_all | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_aggregate_file_path is defined
-    - metrics_aggregate_file_path | string != ""
+    - metrics_aggregate_file_path | default('') | trim | length > 0
+
 
 - block:
     - name: Create host directories and set permissions
@@ -119,7 +116,6 @@
       vars:
         cert_data: "{{ cert_info_results.results }}"
   when:
-    - cert_info_results.results is defined
+    - cert_info_results.results | default('') | trim | length > 0
     - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_host_file_path is defined
-    - metrics_host_file_path | string != ""
+    - metrics_host_file_path | default('') | trim | length > 0
