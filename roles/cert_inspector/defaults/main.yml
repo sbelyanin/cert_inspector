@@ -52,3 +52,13 @@ metrics_owner: "ansible"    # Владелец файлов метрик
 metrics_group: "ansible"    # Группа файлов метрик
 metrics_file_mode: "0644"      # Права доступа к файлам метрик
 metrics_dir_mode: "0755"      # Права доступа к директориям метрик
+
+# Дефолтные значения для Nginx
+auth_user: "metrics_user"
+auth_password: "secure_password"
+local_metrics_port: 8880
+aggregated_metrics_port: 8881
+
+# Дистрибутив-специфичные переменные
+nginx_package: "nginx"
+nginx_service_name: "nginx"
