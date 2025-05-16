@@ -40,16 +40,16 @@ cd cert_inspector
 - **[Запуск playbook](./docs/guide.md#запустите-playbook)**
 - **[Проверка результата](./docs/guide.md#проверим-результат)**
 
+## [Использование тэгов](./docs/guide.md#использование-тэгов)
+ - **[Запуск роли без тэгов](./docs/guide.md#no-tags)**
+ - **[Какие тэги есть в роли](./docs/guide.md#list-tags)**
+ - **[Запуск роли с тэгами](./docs/guide.md#use-tags)**
+
 ## [Роли хостов](./docs/guide.md#роли-хостов)
  - **[Local Scanner](./docs/guide.md#local-scanner)**
  - **[Local Sender](./docs/guide.md#local-sender)**
  - **[Local Exporter](./docs/guide.md#local-exporter)**
  - **[Aggregate Exporter](./docs/guide.md#aggregate-exporter)**
-
-## [Использование тэгов](./docs/guide.md#использование-тэгов)
- - **[Запуск роли без тэгов](./docs/guide.md#no-tags)**
- - **[Какие тэги есть в роли](./docs/guide.md#list-tags)**
- - **[Запуск роли с тэгами](./docs/guide.md#use-tags)**
 
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
  - **[Таблица приоритетов](./docs/variable-precedence.md#таблица)**
