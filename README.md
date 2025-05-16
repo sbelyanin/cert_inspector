@@ -46,6 +46,11 @@ cd cert_inspector
  - **[Local Exporter](./docs/guide.md#local-exporter)**
  - **[Aggregate Exporter](./docs/guide.md#aggregate-exporter)**
 
+## [Использование тэгов](./docs/guide.md#использование-тэгов)
+ - **[Запуск роли без тэгов](./docs/guide.md#no-tags)**
+ - **[Какие тэги есть в роли](./docs/guide.md#list-tags)**
+ - **[Запуск роли с тэгами](./docs/guide.md#use-tags)**
+
 ## [Приоритет переменных в Ansible](./docs/variable-precedence.md)
  - **[Таблица приоритетов](./docs/variable-precedence.md#таблица)**
  - **[Примеры установки значений](./docs/variable-precedence.md#примеры)**

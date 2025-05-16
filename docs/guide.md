@@ -102,13 +102,26 @@ cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issue
 ```
 Отрицательное значение метрики `cert_expiry_seconds` означает, что срок действия сертификата истек.
 
+
+## Использование тэгов
+<a id="no-tags"></a>
+ - **Запуск роли без тэгов**
+При запуске плайбука без указания тэгов запускается только основная часть роли `cert inspector`, которая выполняет задачи в зависимости от [роли хостов](#роли-хостов).
+<a id="list-tags"></a>
+ - **Какие тэги есть в роли**
+<a id="use-tags"></a>
+ - **Запуск роли с тэгами**
+
+
+
+
 ## Роли хостов
+#### Роли хостов это не роли Ansible.
 <a id="local-scanner"></a>
  - **Local Scanner**: Сканирует локальные директории, находит файлы с сертификатами и создает на их основе локальный список для метрик.
 #### Переменные:
-`metrics_host:` объявлена и её значение равно `true`.
-Задает одну из ролей хоста -`Local Scanner`.
 `scan_directories` объявлена и в списке присутствует хотя бы один не пустой элемент `path`.
+Задает одну из ролей хоста -`Local Scanner`.
 Задает параметры сканирования директорий и нахождения файлов.
 #### Одна или обе переменных:
 `metrics_host_file_path` объявлена и не пуста.
@@ -145,7 +158,6 @@ all:
 ```
 - **Групповые переменные** `group_vars/cluster_hosts.yml`:
 ```yaml
-metrics_host: true
 scan_directories:
   - path: "/etc/ssl/certs"
     max_depth: 3
@@ -186,7 +198,6 @@ all:
 - **Групповые переменные**
 #### Для сканеров `group_vars/cluster_hosts.yml`:
 ```yaml
-metrics_host: true
 scan_directories:
   - path: "/etc/ssl/certs"
     max_depth: 3
@@ -196,7 +207,6 @@ metrics_aggregate_delegate_host: "metrics_host"
 - **Хостовые переменные**
 #### Для экспортера `host_vars/metrics_host.yml`:
 ```yaml
-metrics_host: false
 metrics_aggregate_file_path: "/tmp/prom_host_certs_metr.txt"
 ```
 - **Playbook и запуск** `playbooks/cert_inspector.yml`:
@@ -243,10 +253,6 @@ all:
         host4:
         host5:
         host6:
-```
-- **Групповые переменные**  `group_vars/cluster_hosts.yml`:
-```yaml
-metrics_host: true  # Все хосты по умолчанию сканируют сертификаты
 ```
 - **Хостовые переменные**:
 #### Для `host1` `host_vars/host1.yml`:

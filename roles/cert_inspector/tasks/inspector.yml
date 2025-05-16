@@ -51,6 +51,7 @@
       loop: "{{ all_files }}"
       register: ci_cert_info
       ignore_errors: yes
+
   always:
     - name: Remove unused variables
       ansible.builtin.set_fact:
@@ -127,6 +128,15 @@
         mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ ci_cert_info_aggr }}"
+  always:
+    - name: Remove unused variables
+      ansible.builtin.set_fact:
+        "{{ item }}": null
+      loop:
+        - ci_cert_info_aggr
+      when: vars[item] is defined
+      loop_control:
+        label: "{{ item }}"
   when:
     - aggregate_exporter | default(false)
 
@@ -154,5 +164,14 @@
         mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ ci_cert_info.results }}"
+  always:
+    - name: Remove unused variables
+      ansible.builtin.set_fact:
+        "{{ item }}": null
+      loop:
+        - ci_cert_info
+      when: vars[item] is defined
+      loop_control:
+        label: "{{ item }}"
   when:
     - local_exporter | default(false)
