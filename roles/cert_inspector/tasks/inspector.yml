@@ -52,6 +52,17 @@
       register: ci_cert_info
       ignore_errors: yes
   always:
+    - name: Remove unused variables
+      ansible.builtin.set_fact:
+        "{{ item }}": null
+      loop:
+        - dir_stats
+        - found_files
+        - all_files
+      when: vars[item] is defined
+      loop_control:
+        label: "{{ item }}"
+
     - name: Set Local Exporter true if all conditions met
       ansible.builtin.set_fact:
         local_exporter: true
