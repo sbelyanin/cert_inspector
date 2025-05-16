@@ -1,12 +1,12 @@
 ---
 - name: Import Inspector tasks
-  import_tasks: inspector.yml
+  ansible.builtin.import_tasks: inspector.yml
   tags:
     - always
     - inspector
 
-- name: Import setup Nginx tasks
-  import_tasks: nginx.yml
+- name: Import Nginx tasks
+  ansible.builtin.import_tasks: nginx.yml
   when:
     - (aggregate_exporter | default(false)) or
       (local_exporter | default(false))

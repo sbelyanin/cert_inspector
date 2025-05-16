@@ -1,6 +1,6 @@
 ---
 - name: Set Local Scanner true if all conditions met
-  set_fact:
+  ansible.builtin.set_fact:
     local_scanner: true
   when:
     - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
@@ -13,6 +13,7 @@
         path: "{{ item.path }}"
       loop: "{{ scan_directories }}"
       register: dir_stats
+      changed_when: false
       loop_control:
         loop_var: item
 
@@ -37,6 +38,7 @@
         follow: "{{ not item.ignore_dir_links | default(default_ignore_dir_links) }}"
         recurse: "{{ item.recurse | default(default_recurse) }}"
       loop: "{{ scan_directories }}"
+      changed_when: false
       register: found_files
 
     - name: Flatten found files
@@ -47,50 +49,47 @@
       community.crypto.x509_certificate_info:
         path: "{{ item.path }}"
       loop: "{{ all_files }}"
-      register: cert_info_results
+      register: ci_cert_info
       ignore_errors: yes
+  always:
+    - name: Set Local Exporter true if all conditions met
+      ansible.builtin.set_fact:
+        local_exporter: true
+      when:
+        - ci_cert_info.results | default('') | trim | length > 0
+        - (ci_cert_info.results | selectattr('not_after', 'defined') | list | length) > 0
+        - metrics_host_file_path | default('') | trim | length > 0
+
+    - name: Set Local Sender true if all conditions met
+      ansible.builtin.set_fact:
+        local_sender: true
+      when:
+        - ci_cert_info.results | default('') | trim | length > 0
+        - (ci_cert_info.results | selectattr('not_after', 'defined') | list | length) > 0
+        - metrics_aggregate_delegate_host | default('') | trim | length > 0
   when:
     - local_scanner | default(false)
 
-- name: Set Local Exporter true if all conditions met
-  set_fact:
-    local_exporter: true
+- block:
+    - name: Aggregate certificate info from hosts
+      ansible.builtin.set_fact:
+        ci_cert_info_aggr: >-
+          {{
+            groups['all'] | map('extract', hostvars)
+            | selectattr('local_sender', 'defined')
+            | selectattr('local_sender', 'eq', true)
+            | selectattr('metrics_aggregate_delegate_host', '==', inventory_hostname)
+            | map(attribute='ci_cert_info.results')
+            | sum(start=[])
+          }}
+  always:
+    - name: Set Aggregate Exporter true if all conditions met
+      ansible.builtin.set_fact:
+        aggregate_exporter: true
+      when:
+        - ci_cert_info_aggr | default('') | trim | length > 0
+        - (ci_cert_info_aggr | selectattr('not_after', 'defined') | list | length) > 0
   when:
-    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
-    - cert_info_results.results | default('') | trim | length > 0
-    - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_host_file_path | default('') | trim | length > 0
-
-- name: Set Local Sender true if all conditions met
-  set_fact:
-    local_sender: true
-  when:
-    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
-    - cert_info_results.results | default('') | trim | length > 0
-    - (cert_info_results.results | selectattr('not_after', 'defined') | list | length) > 0
-    - metrics_aggregate_delegate_host | default('') | trim | length > 0
-
-
-- name: Aggregate certificate info from hosts
-  ansible.builtin.set_fact:
-    cert_info_all: >-
-      {{
-        groups['all'] | map('extract', hostvars)
-        | selectattr('local_sender', 'defined')
-        | selectattr('local_sender', 'eq', true)
-        | selectattr('metrics_aggregate_delegate_host', '==', inventory_hostname)
-        | map(attribute='cert_info_results.results')
-        | sum(start=[])
-      }}
-  when:
-    - metrics_aggregate_file_path | default('') | trim | length > 0
-
-- name: Set Aggregate Exporter true if all conditions met
-  set_fact:
-    aggregate_exporter: true
-  when:
-    - cert_info_all | default('') | trim | length > 0
-    - (cert_info_all | selectattr('not_after', 'defined') | list | length) > 0
     - metrics_aggregate_file_path | default('') | trim | length > 0
 
 - block:
@@ -104,7 +103,7 @@
         mode: "{{ metrics_dir_mode }}"
 
     - name: Get current time in timestamp (aggregate)
-      command: date +%s
+      ansible.builtin.command: date +%s
       register: current_time
       changed_when: false
 
@@ -116,7 +115,7 @@
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
       vars:
-        cert_data: "{{ cert_info_all }}"
+        cert_data: "{{ ci_cert_info_aggr }}"
   when:
     - aggregate_exporter | default(false)
 
@@ -131,7 +130,7 @@
         mode: "{{ metrics_dir_mode }}"
 
     - name: Get current time in timestamp (host)
-      command: date +%s
+      ansible.builtin.command: date +%s
       register: current_time
       changed_when: false
 
@@ -143,6 +142,6 @@
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
       vars:
-        cert_data: "{{ cert_info_results.results }}"
+        cert_data: "{{ ci_cert_info.results }}"
   when:
     - local_exporter | default(false)
