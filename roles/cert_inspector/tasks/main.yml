@@ -3,7 +3,7 @@
   ansible.builtin.import_tasks: inspector.yml
   tags:
     - always
-    - inspector
+    - ci_inspector
 
 - name: Import Nginx tasks
   ansible.builtin.import_tasks: nginx.yml
@@ -12,4 +12,4 @@
       (local_exporter | default(false))
   tags:
     - never
-    - nginx
+    - ci_nginx

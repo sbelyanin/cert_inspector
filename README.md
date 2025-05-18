@@ -61,42 +61,11 @@ cd cert_inspector
  - **[Сценарий 1](./docs/guide.md#сценарий-1)**
 Много одинаковых хостов, сертификаты в одних директориях, метрики на тех же хостах
  - **[Сценарий 2](./docs/guide.md#сценарий-2)**
-Много одинаковых хостов, сертификаты в одних директориях, метрики на выделеннй хост
+Много одинаковых хостов, сертификаты в одних директориях, метрики на выделенный хост
  - **[Сценарий 3](./docs/guide.md#сценарий-3)**
 Много хостов, сертификаты в разных директориях, гибридная агрегация метрик
 
-## Настройки Nginx для экспорта метрик
-```nginx
-server {
-    listen 8880;
-    server_name _;
+## [Настройки Nginx для экспорта метрик](./docs/guide.md#setup-nginx)
+ - **[Что эта часть делает](./docs/guide.md#setup-nginx-subset)**
+ - **[Запуск](./docs/guide.md#setup-nginx-start)**
 
-    location /metrics {
-        auth_basic "Restricted Access";
-        auth_basic_user_file /etc/nginx/.htpasswd;
-        alias /var/lib/metrics/prom_dhost_certs_metr.txt;
-        default_type text/plain;
-        try_files $uri =404;
-    }
-
-    location / {
-        return 404;
-    }
-}
-server {
-    listen 8881;
-    server_name _;
-
-    location /metrics {
-        auth_basic "Restricted Access";
-        auth_basic_user_file /etc/nginx/.htpasswd;
-        alias /var/lib/metrics/prom_aggr_dhost_certs_metr.txt;
-        default_type text/plain;
-        try_files $uri =404;
-    }
-
-    location / {
-        return 404;
-    }
-}
-```

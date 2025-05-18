@@ -113,8 +113,8 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 ```
 <a id="list-tags"></a>
  - **Какие тэги есть в роли на данный момент.**
-   - `nginx` - запускает или пропускает(по умолчанию) часть роли отвечающей за создание конфигурационных файлов для nginx в виде экспортера.
-   - `inspector` - запускает(по умолчанию) или пропускает основную часть роли `cert inspector`.
+   - `ci_nginx` - запускает или пропускает(по умолчанию) часть роли отвечающей за создание конфигурационных файлов для nginx в виде экспортера.
+   - `ci_inspector` - запускает(по умолчанию) или пропускает основную часть роли `cert inspector`.
 <a id="use-tags"></a>
  - **Запуск роли с тэгами.**
 Запуск основной части и дополнительной части для nginx:
@@ -312,4 +312,63 @@ scan_directories:
 ```
 ```bash
 ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
+```
+
+<a id="setup-nginx"></a>
+## Настройки Nginx для экспорта метрик
+#### Для экспорта метрик нужно создать конфигурационе файлы `nginx` Конфиги роль создает для хостов с ролями [Local](#local-exporter) и [Aggregate](#aggregate-exporter) Exporter. Запустить часть роли отвечающей за настройку `nginx` можно при помощи тэга [`ci_nginx`](#list-tags).
+#### Эта часть роли является дополнением к основной, а не отдельной частью.
+<a id="setup-nginx-subset"></a>
+- **Что эта часть делает** Инсталирует пакет `nginx` в систему на `target host`. Создает из шаблонов два конфигв для `vhost`, включает их в конфиг `nginx`.
+Производит релод `nginx` при необходтмости.
+  - [Локальные метрики](#local-exporter) будут доступны по http://<you IP>:8880/metrics
+  - [Агрегированые метрики](#aggregate-exporter) будут доступны по http://<you IP>:8881/metrics
+Для доступа к метрикам сделанна простая аутентификация:
+  - `auth_user: "metrics_user"`
+  - `auth_password: "secure_password"`
+<a id="setup-nginx-start"></a>
+- **Запуск**
+```bash
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
+```
+```bash
+TASK [cert_inspector : Set nginx_conf_path with fallback] *****************************************************************************************************************
+ok: [localhost]
+ok: [delegate]
+
+TASK [cert_inspector : Set nginx_enabled_conf_path with fallback] *********************************************************************************************************
+ok: [localhost]
+ok: [delegate]
+
+TASK [cert_inspector : Set nginx_link_conf_type with fallback] ************************************************************************************************************
+ok: [localhost]
+ok: [delegate]
+
+TASK [cert_inspector : Install Nginx/Angie] *******************************************************************************************************************************
+ok: [delegate]
+ok: [localhost]
+
+TASK [cert_inspector : Generate .htpasswd file] ***************************************************************************************************************************
+ok: [localhost]
+ok: [delegate]
+
+TASK [cert_inspector : Deploy host metrics Nginx config] ******************************************************************************************************************
+skipping: [delegate]
+ok: [localhost]
+
+TASK [cert_inspector : Deploy aggregate metrics Nginx config] *************************************************************************************************************
+skipping: [localhost]
+ok: [delegate]
+
+TASK [cert_inspector : Enable host metrics Nginx config] ******************************************************************************************************************
+skipping: [delegate]
+ok: [localhost]
+
+TASK [cert_inspector : Enable aggregate metrics Nginx config] *************************************************************************************************************
+skipping: [localhost]
+ok: [delegate]
+
+PLAY RECAP ****************************************************************************************************************************************************************
+delegate                   : ok=14   changed=2    unreachable=0    failed=0    skipped=15   rescued=0    ignored=0   
+localhost                  : ok=21   changed=2    unreachable=0    failed=0    skipped=8    rescued=0    ignored=0
 ```
