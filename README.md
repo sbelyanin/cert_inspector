@@ -67,6 +67,7 @@ cd cert_inspector
 
 ## [Настройки Nginx для экспорта метрик](./docs/guide.md#setup-nginx)
  - **[Что эта часть делает](./docs/guide.md#setup-nginx-subset)**
+ - **[Доступ к метрикам](./docs/guide.md#setup-nginx-metr)**
  - **[Простая аутентификация](./docs/guide.md#setup-nginx-auth)**
  - **[Запуск](./docs/guide.md#setup-nginx-start)**
 

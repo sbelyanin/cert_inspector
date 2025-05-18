@@ -316,17 +316,25 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 
 <a id="setup-nginx"></a>
 ## Настройки Nginx для экспорта метрик
-#### Для экспорта метрик нужно создать конфигурационе файлы `nginx`. Конфиги создаются для хостов с ролями [Local](#local-exporter) и [Aggregate](#aggregate-exporter) Exporter. Запустить часть роли отвечающей за настройку `nginx` можно при помощи тэга [`ci_nginx`](#list-tags).
+#### Для экспорта метрик нужно создать конфигурационные файлы `nginx`. Конфиги создаются для хостов с ролями [Local](#local-exporter) и [Aggregate](#aggregate-exporter) Exporter. Запустить часть роли отвечающей за настройку `nginx` можно при помощи тэга [`ci_nginx`](#list-tags).
 #### Эта часть роли является дополнением к основной, а не отдельной частью.
+
 <a id="setup-nginx-subset"></a>
-- **Что эта часть делает** Инсталирует пакет `nginx` в систему на `target host`. Создает из шаблонов два конфигв для `vhost`, включает их в конфиг `nginx`.
-Производит релод `nginx` при необходтмости.
-  - [Локальные метрики](#local-exporter) будут доступны по http://<you IP>:8880/metrics
-  - [Агрегированые метрики](#aggregate-exporter) будут доступны по http://<you IP>:8881/metrics
+- **Что делает эта часть**
+  - Устанавливает пакет `Nginx` на целевом хосте (`target host`).
+  - Создаёт из шаблонов два конфигурационных файла для виртуальных хостов (`vhost`) и подключает их в конфигурацию `Nginx`.
+  - Выполняет перезагрузку `Nginx` при необходимости.
+
+<a id="setup-nginx-metr"></a>
+- **Доступ к метрикам**
+  - [Локальные метрики](#local-exporter) будут доступны по адресу `http://YOU_IP:8880/metrics`
+  - [Агрегированые метрики](#aggregate-exporter) будут доступны по адресу ` http://YOU_IP:8881/metrics`
+
 <a id="setup-nginx-auth"></a>
-- **Для доступа к метрикам сделанна простая аутентификация**
+- **Для доступа к метрикам реализована простая аутентификация.**
   - `auth_user: "metrics_user"`
   - `auth_password: "secure_password"`
+
 <a id="setup-nginx-start"></a>
 - **Запуск**
 ```bash
