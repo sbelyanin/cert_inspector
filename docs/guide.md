@@ -117,9 +117,9 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
    - `ci_inspector` - запускает(по умолчанию) или пропускает основную часть роли `cert inspector`.
 <a id="use-tags"></a>
  - **Запуск роли с тэгами.**
-Запуск основной части и дополнительной части для nginx:
+   - Запуск основной части и дополнительной части для nginx:
 ```bash
-ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "nginx"
+ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
 ```
 
 ## Роли хостов
