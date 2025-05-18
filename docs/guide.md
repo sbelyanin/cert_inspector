@@ -21,17 +21,17 @@ all:
 <a id="проверим-доступность"></a>
  - **Проверим доступность** наших "хостов".
 Предварительно убедитесь, что пользователь `ansible` есть в системе и у него есть необходимые права (для входа в систему через `ssh`).
-Если аутентификация по паролю:
+   - Если аутентификация по паролю:
 ```bash
 ansible all -m ping -i inventory.yml --ask-pass
 ```
-Если аутентификация по `ssh` ключу:
+   - Если аутентификация по `ssh` ключу:
 ```bash
 ansible all -m ping -i inventory.yml
 ```
 
 <a id="простой-playbook"></a>
- -  Проверьте или отредактируйте **простой Playbook** `playbooks/cert_inspector.yml`: 
+ - Проверьте или отредактируйте **простой Playbook** `playbooks/cert_inspector.yml`: 
 ```yaml
 - name: Certificate inspector
   hosts: cluster_hosts
@@ -47,15 +47,13 @@ ansible all -m ping -i inventory.yml
 host_vars/delegate.yml
 ```yaml
 metrics_host_file_path: "/tmp/prom_dhost_certs_metr.txt"
-metrics_host: true
 ```
 host_vars/localhost.yml
 ```yaml
 metrics_host_file_path: "/tmp/prom_lhost_certs_metr.txt"
-metrics_host: true
 ```
 Непустая и объявленная переменная `metrics_host_file_path` определяет полный путь до файла с метриками на текущем хосте.
-Файл с метриками будет создаваться и содержать метрики с текущего хоста, которые собираются при `metrics_host: true`.
+Файл с метриками будет создаваться и содержать метрики с текущего хоста.
 
 <a id="переменных-хостов"></a>
  - Проверьте или отредактируйте файлы для **переменных хостов** для указания директорий где и с какими параметрами искать сертификаты.
@@ -74,7 +72,6 @@ scan_directories:
     file_type: file
 ```
 Непустая переменная `scan_directories` должна содержать значение `path`, остальные не указанные значения подставляются из `cert_inspector/roles/cert_inspector/defaults/main.yml`.
-При `metrics_host: true` будут создаваться локальные метрики из файлов сертификатов найденных по параметрам, указанным в `scan_directories`.
 
 <a id="запустите-playbook"></a>
  - **Запустите Playbook**:
