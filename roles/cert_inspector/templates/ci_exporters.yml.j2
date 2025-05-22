@@ -1,0 +1,7 @@
+- targets:
+{% for host in ansible_play_hosts %}
+    - {{ hostvars[host].ansible_host }}:{{ hostvars[host]['local_metrics_port'] }}
+{% endfor %}
+  labels:
+    job: ci_exporters
+    env: production
