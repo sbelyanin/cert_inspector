@@ -1,3 +1,2 @@
 ci_sd_prometheus_file: "/srv/prom/ci_exporters.yml"
-local_metrics_port: 8880
 

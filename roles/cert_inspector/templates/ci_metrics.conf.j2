@@ -1,0 +1,33 @@
+{% set location_paths = ['/', '/metrics'] %}
+{% if local_exporter is defined and local_exporter %}
+server {
+    listen {{ local_metrics_port }};
+    server_name _;
+{% for location in location_paths %}    
+    location {{ location }} {
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        root {{ metrics_host_file_path | dirname }};
+        try_files /{{ metrics_host_file_path | basename }} =404;
+        default_type text/plain;
+        index off;
+    }
+{% endfor %}
+}
+{% endif %}
+{% if aggregate_exporter is defined and aggregate_exporter %}
+server {
+    listen {{ aggregated_metrics_port }};
+    server_name _;
+{% for location in location_paths %}
+    location {{ location }} {
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        root {{ metrics_aggregate_file_path | dirname }}; 
+        try_files /{{ metrics_aggregate_file_path | basename }} =404;
+        default_type text/plain;
+        index off;
+    }
+{% endfor %}
+}
+{% endif %}

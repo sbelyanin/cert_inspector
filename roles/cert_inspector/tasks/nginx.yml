@@ -46,45 +46,22 @@
         group: www-data
         mode: '0640'
 
-    - name: Deploy host metrics Nginx config
+    - name: Deploy metrics Nginx config
       ansible.builtin.template:
-        src: host_metrics.conf.j2
-        dest: "{{ nginx_conf_path }}/host_metrics.conf"
+        src: ci_metrics.conf.j2
+        dest: "{{ nginx_conf_path }}/ci_{{ inventory_hostname }}_metrics.conf"
         owner: root
         group: root
         mode: 0644
       notify: Reload Nginx
-      when:
-        - local_exporter | default(false)
 
-    - name: Deploy aggregate metrics Nginx config
-      ansible.builtin.template:
-        src: aggregate_metrics.conf.j2
-        dest: "{{ nginx_conf_path }}/aggregate_metrics.conf"
-        owner: root
-        group: root
-        mode: 0644
-      notify: Reload Nginx
-      when:
-        - aggregate_exporter | default(false)
-
-    - name: Enable host metrics Nginx config
+    - name: Enable metrics Nginx config
       ansible.builtin.file:
-        src: "{{ nginx_conf_path }}/host_metrics.conf"
-        dest: "{{ nginx_enabled_conf_path }}/host_metrics.conf"
+        src: "{{ nginx_conf_path }}/ci_{{ inventory_hostname }}_metrics.conf"
+        dest: "{{ nginx_enabled_conf_path }}/ci_{{ inventory_hostname }}_metrics.conf"
         state: "{{ nginx_link_conf_type }}"
       notify: Reload Nginx
-      when:
-        - local_exporter | default(false)
 
-    - name: Enable aggregate metrics Nginx config
-      ansible.builtin.file:
-        src: "{{ nginx_conf_path }}/aggregate_metrics.conf"
-        dest: "{{ nginx_enabled_conf_path }}/aggregate_metrics.conf"
-        state: "{{ nginx_link_conf_type }}"
-      notify: Reload Nginx
-      when:
-        - aggregate_exporter | default(false)
   become: yes
   when:
     - nginx_conf_path | default('') | trim | length > 0

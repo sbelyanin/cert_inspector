@@ -127,7 +127,7 @@
 
     - name: Generate aggregated metrics file
       ansible.builtin.template:
-        src: certificates.prom.j2
+        src: ci_metrics.prom.j2
         dest: "{{ metrics_aggregate_file_path }}"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
@@ -163,7 +163,7 @@
 
     - name: Generate host metrics file
       ansible.builtin.template:
-        src: certificates.prom.j2
+        src: ci_metrics.prom.j2
         dest: "{{ metrics_host_file_path }}"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"

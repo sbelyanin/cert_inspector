@@ -40,7 +40,7 @@ default_scan_depth: 3
 # Дефолтные значения для файлов метрик
 # Локальные метрики будут доступны на текущем хосте по указанному пути.
 # Если на данном хосте собирались локальные метрики (определена и не пуста `scan_directories`).
-metrics_host_file_path: "/var/lib/metrics/prom_{{ inventory_hostname }}_certs.txt"
+metrics_host_file_path: "/var/lib/metrics/prom_host_{{ inventory_hostname }}_certs.txt"
 # Агрегированные метрики будут доступны на текущем хосте по указанному пути.
 # Если на данный хост делегировались метрики для агрегации 
 # с хостов где  переменная `metrics_aggregate_delegate_host` указывала на текущий хост.
