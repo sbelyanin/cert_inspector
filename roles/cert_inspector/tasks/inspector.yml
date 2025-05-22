@@ -7,6 +7,12 @@
     - (metrics_host_file_path | default('') | trim | length > 0) or
       (metrics_aggregate_delegate_host | default('') | trim | length > 0)
 
+- name: Set Prometheus Server true if all conditions met
+  ansible.builtin.set_fact:
+    ci_prometheus_server: true
+  when:
+    - ci_sd_prometheus_file | default('') | trim | length > 0
+
 - block:
     - name: Check if directories exist and are readable
       ansible.builtin.stat:

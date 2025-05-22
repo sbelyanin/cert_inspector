@@ -13,3 +13,11 @@
   tags:
     - never
     - ci_nginx
+
+- name: Import Prometheus tasks
+  ansible.builtin.import_tasks: prometheus.yml
+  when:
+    - ci_prometheus_server | default(false)
+  tags:
+    - never
+    - ci_prometheus
