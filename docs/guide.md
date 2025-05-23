@@ -59,19 +59,19 @@ metrics_host_file_path: "/tmp/prom_lhost_certs_metr.txt"
  - Проверьте или отредактируйте файлы для **переменных хостов** для указания директорий где и с какими параметрами искать сертификаты.
 host_vars/delegate.yml
 ```yaml
-scan_directories:
+ci_scan_directories:
   - path: "/etc"
     max_size: "-1m"
     file_type: file
 ```
 host_vars/localhost.yml
 ```yaml
-scan_directories:
+ci_scan_directories:
   - path: "/usr"
     max_size: "-1m"
     file_type: file
 ```
-Непустая переменная `scan_directories` должна содержать значение `path`, остальные не указанные значения подставляются из `cert_inspector/roles/cert_inspector/defaults/main.yml`.
+Непустая переменная `ci_scan_directories` должна содержать значение `path`, остальные не указанные значения подставляются из `cert_inspector/roles/cert_inspector/defaults/main.yml`.
 
 <a id="запустите-playbook"></a>
  - **Запустите Playbook**:
@@ -110,11 +110,12 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 ```
 <a id="list-tags"></a>
  - **Какие тэги есть в роли на данный момент.**
-   - `ci_nginx` - запускает или пропускает(по умолчанию) часть роли отвечающей за создание конфигурационных файлов для nginx в виде экспортера.
-   - `ci_inspector` - запускает(по умолчанию) или пропускает основную часть роли `cert inspector`.
+   - `ci_nginx` - запускает или пропускает (по умолчанию) часть роли отвечающей за создание конфигурационного файла для `nginx`.
+   - `ci_nginx` - запускает или пропускает (по умолчанию) часть роли отвечающей за создание конфигурационного файла для `prometheus`.
+   - `ci_inspector` - запускает (по умолчанию) или пропускает основную часть роли `cert inspector`.
 <a id="use-tags"></a>
  - **Запуск роли с тэгами.**
-   - Запуск основной части и дополнительной части для nginx:
+   - Запуск основной части и дополнительной части для `nginx`:
 ```bash
 ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
 ```
@@ -124,16 +125,16 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
 <a id="local-scanner"></a>
  - **Local Scanner**: Сканирует локальные директории, находит файлы с сертификатами и создает на их основе локальный список для метрик.
 #### Переменные:
-`scan_directories` объявлена и в списке присутствует хотя бы один не пустой элемент `path`.
+`ci_scan_directories` объявлена и в списке присутствует хотя бы один не пустой элемент `path`.
 Задает одну из ролей хоста -`Local Scanner`.
 Задает параметры сканирования директорий и нахождения файлов.
 #### Одна или обе переменных:
 `metrics_host_file_path` объявлена и не пуста.
 Задает полный путь до файла куда будут записываться метрики с локального хоста.
-`metrics_aggregate_delegate_host` объявлена и не пуста.
+`ci_metrics_aggregate_host` объявлена и не пуста.
 Задает имя хоста из инвентори, который будет агрегировать локальные метрики с локального хоста.
 <a id="local-sender"></a>
- - **Local Sender**: Часть роли `Local Scanner` в которой переменная `metrics_aggregate_delegate_host` объявлена и не пуста.
+ - **Local Sender**: Часть роли `Local Scanner` в которой переменная `ci_metrics_aggregate_host` объявлена и не пуста.
 Передает локальные метрики на хост, выполняющий роль `Aggregate Exporter`.
 <a id="local-exporter"></a>
  - **Local Exporter**: Часть роли `Local Scanner` в которой переменная `metrics_host_file_path` объявлена и не пуста.
@@ -162,7 +163,7 @@ all:
 ```
 - **Групповые переменные** `group_vars/cluster_hosts.yml`:
 ```yaml
-scan_directories:
+ci_scan_directories:
   - path: "/etc/ssl/certs"
     max_depth: 3
     file_type: file
@@ -202,11 +203,11 @@ all:
 - **Групповые переменные**
 #### Для сканеров `group_vars/cluster_hosts.yml`:
 ```yaml
-scan_directories:
+ci_scan_directories:
   - path: "/etc/ssl/certs"
     max_depth: 3
     file_type: file
-metrics_aggregate_delegate_host: "metrics_host"
+ci_metrics_aggregate_host: "metrics_host"
 ```
 - **Хостовые переменные**
 #### Для экспортера `host_vars/metrics_host.yml`:
@@ -262,41 +263,41 @@ all:
 #### Для `host1` `host_vars/host1.yml`:
 ```yaml
 metrics_host_file_path: "/tmp/host1_certs_metrics.txt"  # Локальный экспорт
-metrics_aggregate_delegate_host: "host5"  # Отправка метрик на host5
-scan_directories:
+ci_metrics_aggregate_host: "host5"  # Отправка метрик на host5
+ci_scan_directories:
   - path: "/etc/host1_certs"  # Уникальная директория
 ```
 #### Для `host2` `host_vars/host2.yml`:
 ```yaml
-metrics_aggregate_delegate_host: "host5"  # Отправка на host5
-scan_directories:
+ci_metrics_aggregate_host: "host5"  # Отправка на host5
+ci_scan_directories:
   - path: "/opt/certs"
 ```
 #### Для `host3` `host_vars/host3.yml`:
 ```yaml
 metrics_host_file_path: "/tmp/host3_certs_metrics.txt"  # Локальный экспорт
-metrics_aggregate_delegate_host: "host6"  # Отправка на host6
-scan_directories:
+ci_metrics_aggregate_host: "host6"  # Отправка на host6
+ci_scan_directories:
   - path: "/var/ssl"
 ```
 #### Для `host4` `host_vars/host4.yml`:
 ```yaml
-metrics_aggregate_delegate_host: "host6"  # Отправка на host6
-scan_directories:
+ci_metrics_aggregate_host: "host6"  # Отправка на host6
+ci_scan_directories:
   - path: "/home/user/certs"
 ```
 #### Для `host5` `host_vars/host5.yml`:
 ```yaml
 metrics_aggregate_file_path: "/tmp/agg_host5_metrics.txt"  # Агрегированные метрики
-metrics_aggregate_delegate_host: "host6"  # Отправка на host6
-scan_directories:
+ci_metrics_aggregate_host: "host6"  # Отправка на host6
+ci_scan_directories:
   - path: "/etc/host5_certs"  # Уникальная директория
 ```
 #### Для `host6` `host_vars/host6.yml`:
 ```yaml
 metrics_aggregate_file_path: "/tmp/agg_host6_metrics.txt"  # Агрегированные метрики
-metrics_aggregate_delegate_host: "host5"  # Отправка на host5
-scan_directories:
+ci_metrics_aggregate_host: "host5"  # Отправка на host5
+ci_scan_directories:
   - path: "/etc/nginx/ssl"  # host6 также сканирует свои сертификаты
 ```
 - **Playbook и запуск** `playbooks/cert_inspector.yml`:
@@ -313,14 +314,14 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 
 <a id="setup-nginx"></a>
 ## Настройки Nginx для экспорта метрик
-#### Для экспорта метрик нужно создать конфигурационные файлы `nginx`. Конфиги создаются для хостов с ролями [Local](#local-exporter) и [Aggregate](#aggregate-exporter) Exporter. Запустить часть роли отвечающей за настройку `nginx` можно при помощи тэга [`ci_nginx`](#list-tags).
+#### Для экспорта метрик нужно создать конфигурационный файл `nginx`. Конфиг создаются для хостов с ролями [Local](#local-exporter) и [Aggregate](#aggregate-exporter) Exporter. Запустить часть роли отвечающей за настройку `nginx` можно при помощи тэга [`ci_nginx`](#list-tags).
 #### Эта часть роли является дополнением к основной, а не отдельной частью.
 
 <a id="setup-nginx-subset"></a>
 - **Что делает эта часть**
   - Устанавливает пакет `Nginx` на целевом хосте (`target host`).
-  - Создаёт из шаблонов два конфигурационных файла для виртуальных хостов (`vhost`) и подключает их в конфигурацию `Nginx`.
-  - Выполняет перезагрузку `Nginx` при необходимости.
+  - Создаёт из шаблона конфигурационный файл для виртуальных хостов (`vhost`) и подключает его в конфигурацию `Nginx`.
+  - Выполняет перезагрузку конфигурации `Nginx` при необходимости.
 
 <a id="setup-nginx-metr"></a>
 - **Доступ к метрикам**

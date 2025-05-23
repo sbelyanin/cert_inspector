@@ -1,6 +1,6 @@
-scan_directories:
+ci_scan_directories:
   - path: "/usr"
   - path: "/etc"
 
-metrics_aggregate_delegate_host: delegate
+ci_metrics_aggregate_host: delegate
 

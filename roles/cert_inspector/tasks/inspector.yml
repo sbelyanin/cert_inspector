@@ -1,23 +1,23 @@
 ---
 - name: Set Local Scanner true if all conditions met
   ansible.builtin.set_fact:
-    local_scanner: true
+    ci_local_scanner: true
   when:
-    - (scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+    - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
     - (metrics_host_file_path | default('') | trim | length > 0) or
-      (metrics_aggregate_delegate_host | default('') | trim | length > 0)
+      (ci_metrics_aggregate_host | default('') | trim | length > 0)
 
 - name: Set Prometheus Server true if all conditions met
   ansible.builtin.set_fact:
     ci_prometheus_server: true
   when:
-    - ci_sd_prometheus_file | default('') | trim | length > 0
+    - ci_targets_file | default('') | trim | length > 0
 
 - block:
     - name: Check if directories exist and are readable
       ansible.builtin.stat:
         path: "{{ item.path }}"
-      loop: "{{ scan_directories }}"
+      loop: "{{ ci_scan_directories }}"
       register: dir_stats
       changed_when: false
       loop_control:
@@ -26,7 +26,7 @@
     - name: Fail if directory is not found or not readable
       ansible.builtin.fail:
         msg: "Directory {{ item.0.path }} does not exist or is not readable"
-      loop: "{{ scan_directories | zip(dir_stats.results) | list }}"
+      loop: "{{ ci_scan_directories | zip(dir_stats.results) | list }}"
       when:
         - item.0.exit_when_absent | default(default_exit_when_absent)
         - (not item.1.stat.exists) or (not item.1.stat.readable)
@@ -43,7 +43,7 @@
         depth: "{{ item.depth | default(default_scan_depth) }}"
         follow: "{{ not item.ignore_dir_links | default(default_ignore_dir_links) }}"
         recurse: "{{ item.recurse | default(default_recurse) }}"
-      loop: "{{ scan_directories }}"
+      loop: "{{ ci_scan_directories }}"
       changed_when: false
       register: found_files
 
@@ -72,7 +72,7 @@
 
     - name: Set Local Exporter true if all conditions met
       ansible.builtin.set_fact:
-        local_exporter: true
+         ci_local_exporter: true
       when:
         - ci_cert_info.results | default('') | trim | length > 0
         - (ci_cert_info.results | selectattr('not_after', 'defined') | list | length) > 0
@@ -80,13 +80,13 @@
 
     - name: Set Local Sender true if all conditions met
       ansible.builtin.set_fact:
-        local_sender: true
+        ci_local_sender: true
       when:
         - ci_cert_info.results | default('') | trim | length > 0
         - (ci_cert_info.results | selectattr('not_after', 'defined') | list | length) > 0
-        - metrics_aggregate_delegate_host | default('') | trim | length > 0
+        - ci_metrics_aggregate_host | default('') | trim | length > 0
   when:
-    - local_scanner | default(false)
+    -  ci_local_scanner | default(false)
 
 - block:
     - name: Aggregate certificate info from hosts
@@ -94,16 +94,16 @@
         ci_cert_info_aggr: >-
           {{
             groups['all'] | map('extract', hostvars)
-            | selectattr('local_sender', 'defined')
-            | selectattr('local_sender', 'eq', true)
-            | selectattr('metrics_aggregate_delegate_host', '==', inventory_hostname)
+            | selectattr('ci_local_sender', 'defined')
+            | selectattr('ci_local_sender', 'eq', true)
+            | selectattr('ci_metrics_aggregate_host', '==', inventory_hostname)
             | map(attribute='ci_cert_info.results')
             | sum(start=[])
           }}
   always:
     - name: Set Aggregate Exporter true if all conditions met
       ansible.builtin.set_fact:
-        aggregate_exporter: true
+        ci_aggregate_exporter: true
       when:
         - ci_cert_info_aggr | default('') | trim | length > 0
         - (ci_cert_info_aggr | selectattr('not_after', 'defined') | list | length) > 0
@@ -144,7 +144,7 @@
       loop_control:
         label: "{{ item }}"
   when:
-    - aggregate_exporter | default(false)
+    - ci_aggregate_exporter | default(false)
 
 - block:
     - name: Create host directories and set permissions
@@ -180,4 +180,4 @@
       loop_control:
         label: "{{ item }}"
   when:
-    - local_exporter | default(false)
+    - ci_local_exporter | default(false)

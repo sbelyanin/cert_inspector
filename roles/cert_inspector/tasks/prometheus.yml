@@ -1,5 +1,5 @@
 ---
 - name: Generate targets file for Prometheus
   ansible.builtin.template:
-    src: ci_exporters.yml.j2
-    dest: "{{ ci_sd_prometheus_file }}"
+    src: ci_targets.yml.j2
+    dest: "{{ ci_targets_file }}"

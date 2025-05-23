@@ -1,2 +1,2 @@
-ci_sd_prometheus_file: "/srv/prom/ci_exporters.yml"
+ci_targets_file: "/srv/prom/ci_targets.yml"
 

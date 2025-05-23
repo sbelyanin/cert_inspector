@@ -1,10 +1,10 @@
 # Настройки ролей хостов по умолчанию
 # Хосты по умолчанию не учавствуют в сканировании сертификатов и создании локальных метрик,
-# переменная `scan_directories` по умолчанию не определенна.
+# переменная `ci_scan_directories` по умолчанию не определенна.
 
 # Пример конфигурации сканирования директорий
-# В `scan_directories` только параметр `path` обязателен. Не указанные значения берутся из дефолтов.
-#scan_directories:
+# В `ci_scan_directories` только параметр `path` обязателен. Не указанные значения берутся из дефолтов.
+#ci_scan_directories:
 #  - path: "/etc"             # Искать файлы в директории `/etc`. Обязательный параметр.
 #    patterns:                # Поиск файлов по маске
 #      - '*.pem'
@@ -18,7 +18,7 @@
 #    exit_when_absent: true   # Прерывать playbook в случае недоступности директории `path: "/etc"`.
 #  - path: "/usr"             # Искать файлы в директории `/usr`. Обязательный параметр.
 
-# Дефолтные значения для сканирования директорий (`scan_directories`).
+# Дефолтные значения для сканирования директорий (`ci_scan_directories`).
 default_exit_when_absent: false
 default_patterns:
   - '*.crt'
@@ -31,10 +31,10 @@ default_recurse: true
 default_scan_depth: 3
 
 # Хосты по умолчанию не участвуют в агрегации метрик (не отправляются на хост агрегатор).
-# Значение переменной `metrics_aggregate_delegate_host` указывает на хост агрегатор из инвентори.
+# Значение переменной `ci_metrics_aggregate_host` указывает на хост агрегатор из инвентори.
 # Пример:
-# metrics_aggregate_delegate_host: exporter
-# Текущий хост с собранными локальными метрикамии (определена и не пуста scan_directories) пересылает их на хост `exporter`.
+# ci_metrics_aggregate_host: exporter
+# Текущий хост с собранными локальными метрикамии (определена и не пуста ci_scan_directories) пересылает их на хост `exporter`.
 
 
 # Дефолтные значения для файлов метрик
@@ -65,4 +65,4 @@ nginx_service_name: "nginx"
 
 # Путь к файлу конфигурации "file SD" Prometheus
 # По умолчанию не определен.
-# ci_sd_prometheus_file: "/etc/prometheus/cert_inspector.yml"
+# ci_targets_file: "/etc/prometheus/ci_targets.yml"
