@@ -7,17 +7,12 @@
 
 - name: Import Nginx tasks
   ansible.builtin.import_tasks: nginx.yml
-  when:
-    - (ci_aggregate_exporter | default(false)) or
-      (ci_local_exporter | default(false))
   tags:
     - never
     - ci_nginx
 
 - name: Import Prometheus tasks
   ansible.builtin.import_tasks: prometheus.yml
-  when:
-    - ci_prometheus_server | default(false)
   tags:
     - never
     - ci_prometheus

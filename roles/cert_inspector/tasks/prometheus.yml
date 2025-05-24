@@ -1,5 +1,24 @@
 ---
+- name: Set ci_prometheus_aggregate_target
+  ansible.builtin.set_fact:
+    ci_prometheus_aggregate_target: "{{ ansible_host }}:{{ aggregated_metrics_port }}"
+  when:
+    - aggregated_metrics_port | default('') | trim | length > 0
+    - ci_aggregate_exporter | default(false)
+
+- name: Set ci_prometheus_local_target
+  ansible.builtin.set_fact:
+    ci_prometheus_local_target: "{{ ansible_host }}:{{ local_metrics_port }}"
+  when:
+    - local_metrics_port | default('') | trim | length > 0
+    - ci_local_exporter | default(false)
+
 - name: Generate targets file for Prometheus
   ansible.builtin.template:
     src: ci_targets.yml.j2
     dest: "{{ ci_targets_file }}"
+  when:
+    - (ci_prometheus_aggregate_target | default(false)) or
+      (ci_prometheus_local_target | default(false))
+    - ci_targets_file | default('') | trim | length > 0
+
