@@ -7,8 +7,8 @@ server {
     location {{ location }} {
         auth_basic "Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
-        root {{ metrics_host_file_path | dirname }};
-        try_files /{{ metrics_host_file_path | basename }} =404;
+        root {{ ci_metrics_local_file | dirname }};
+        try_files /{{ ci_metrics_local_file | basename }} =404;
         default_type text/plain;
         index off;
     }
@@ -23,8 +23,8 @@ server {
     location {{ location }} {
         auth_basic "Restricted Access";
         auth_basic_user_file /etc/nginx/.htpasswd;
-        root {{ metrics_aggregate_file_path | dirname }}; 
-        try_files /{{ metrics_aggregate_file_path | basename }} =404;
+        root {{ ci_metrics_aggregate_file | dirname }}; 
+        try_files /{{ ci_metrics_aggregate_file | basename }} =404;
         default_type text/plain;
         index off;
     }
