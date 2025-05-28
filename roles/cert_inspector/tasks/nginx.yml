@@ -1,34 +1,42 @@
 ---
-- name: Set nginx_conf_path with fallback
-  ansible.builtin.set_fact:
-    nginx_conf_path: >-
-      {{
-        "/etc/nginx/sites-available" if ansible_os_family == "Debian"
-        else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
-        else "/etc/nginx"
-      }}
-  when: nginx_conf_path is not defined
+- block:
+    - name: Get only needs facts
+      ansible.builtin.setup:
+        filter: "{{ item }}"
+      loop:
+        - ansible_os_family
 
-- name: Set nginx_enabled_conf_path with fallback
-  ansible.builtin.set_fact:
-    nginx_enabled_conf_path: >-
-      {{
-        "/etc/nginx/sites-enabled" if ansible_os_family == "Debian"
-        else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
-        else "/etc/nginx"
-      }}
-  when: nginx_enabled_conf_path is not defined
+    - name: Set nginx_conf_path with fallback
+      ansible.builtin.set_fact:
+        nginx_conf_path: >-
+          {{
+            "/etc/nginx/sites-available" if ansible_os_family == "Debian"
+            else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
+            else "/etc/nginx"
+          }}
+      when: nginx_conf_path is not defined
 
-- name: Set nginx_link_conf_type with fallback
-  ansible.builtin.set_fact:
-    nginx_link_conf_type: >-
-      {{
-        "link" if ansible_os_family == "Debian"
-        else "hard" if ansible_os_family == "RedHat"
-        else "hard"
-      }}
-  when: nginx_link_conf_type is not defined
+    - name: Set nginx_enabled_conf_path with fallback
+      ansible.builtin.set_fact:
+        nginx_enabled_conf_path: >-
+          {{
+            "/etc/nginx/sites-enabled" if ansible_os_family == "Debian"
+            else "/etc/nginx/conf.d" if ansible_os_family == "RedHat"
+            else "/etc/nginx"
+          }}
+      when: nginx_enabled_conf_path is not defined
 
+    - name: Set nginx_link_conf_type with fallback
+      ansible.builtin.set_fact:
+        nginx_link_conf_type: >-
+          {{
+            "link" if ansible_os_family == "Debian"
+            else "hard" if ansible_os_family == "RedHat"
+            else "hard"
+          }}
+      when: nginx_link_conf_type is not defined
+  when:
+    - (ci_local_exporter | default(false)) or (ci_aggregate_exporter | default(false))
 
 - block:
     - name: Install Nginx/Angie

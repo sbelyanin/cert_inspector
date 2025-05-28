@@ -1,4 +1,13 @@
 ---
+- name: Get only needs facts
+  ansible.builtin.setup:
+    filter: "{{ item }}"
+  when:
+    - (ci_aggregate_exporter | default(false)) or
+      (ci_local_exporter | default(false))
+  loop:
+    - ansible_host
+
 - name: Set ci_prometheus_aggregate_target
   ansible.builtin.set_fact:
     ci_prometheus_aggregate_target: "{{ ansible_host }}:{{ aggregated_metrics_port }}"
