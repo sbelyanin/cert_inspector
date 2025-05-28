@@ -1,0 +1,12 @@
+- targets:
+{% for host in ansible_play_hosts %}
+{% if hostvars[host].ci_prometheus_local_target is defined and hostvars[host].ci_prometheus_local_target  %}
+    - {{ hostvars[host].ci_prometheus_local_target }}
+{% endif %}
+{% if hostvars[host].ci_prometheus_aggregate_target is defined and hostvars[host].ci_prometheus_aggregate_target %}
+    - {{ hostvars[host].ci_prometheus_aggregate_target }}
+{% endif %}
+{% endfor %}
+  labels:
+    job: ci_exporter
+    env: production
