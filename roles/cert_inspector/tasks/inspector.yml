@@ -119,15 +119,21 @@
       register: current_time
       changed_when: false
 
-    - name: Generate aggregated metrics file
+    - name: Generate temp aggregated metrics file
       ansible.builtin.template:
         src: ci_metrics.prom.j2
-        dest: "{{ ci_metrics_aggregate_file }}"
+        dest: "{{ ci_metrics_aggregate_file }}.tmp"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ ci_cert_info_aggr }}"
+
+    - name: Atomically replace aggregated metrics file
+      ansible.builtin.command:
+        cmd: "mv {{ ci_metrics_aggregate_file }}.tmp {{ ci_metrics_aggregate_file }}"
+        removes: "{{ ci_metrics_aggregate_file }}.tmp"
+
   always:
     - name: Remove unused variables
       ansible.builtin.set_fact:
@@ -155,15 +161,21 @@
       register: current_time
       changed_when: false
 
-    - name: Generate host metrics file
+    - name: Generate temp local metrics file
       ansible.builtin.template:
         src: ci_metrics.prom.j2
-        dest: "{{ ci_metrics_local_file }}"
+        dest: "{{ ci_metrics_local_file }}.tmp"
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
       vars:
         cert_data: "{{ ci_cert_info.results }}"
+
+    - name: Atomically replace local metrics file
+      ansible.builtin.command:
+        cmd: "mv {{ ci_metrics_local_file }}.tmp {{ ci_metrics_local_file }}"
+        removes: "{{ ci_metrics_local_file }}.tmp"
+
   always:
     - name: Remove unused variables
       ansible.builtin.set_fact:
