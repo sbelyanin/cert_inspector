@@ -1,4 +1,10 @@
 ---
+- name: Import Init tasks
+  ansible.builtin.import_tasks: init.yml
+  tags:
+    - always
+    - ci_init
+
 - name: Import Inspector tasks
   ansible.builtin.import_tasks: inspector.yml
   tags:
