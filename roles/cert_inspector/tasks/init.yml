@@ -52,6 +52,11 @@
       register: ci_cert_info_temp
       ignore_errors: yes
 
+    - name: Get current time in timestamp
+      ansible.builtin.command: date +%s
+      register: current_time
+      changed_when: false
+
     - name: Filter certificate results and add hostname
       ansible.builtin.set_fact:
         ci_cert_info: >-
@@ -63,7 +68,8 @@
               'subject': item.subject | default({}),
               'subject_alt_name': item.subject_alt_name | default([]),
               'failed': item.failed | default(false),
-              'hostname': inventory_hostname
+              'hostname': inventory_hostname,
+              'remaining': (item.not_after | to_datetime('%Y%m%d%H%M%SZ')).timestamp() | int - current_time.stdout | int
             }]
           }}
       loop: "{{ ci_cert_info_temp.results }}"
@@ -122,3 +128,4 @@
         - (ci_cert_info_aggr | selectattr('not_after', 'defined') | list | length) > 0
   when:
     - ci_metrics_aggregate_file | default('') | trim | length > 0
+
