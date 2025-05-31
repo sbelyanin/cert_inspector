@@ -4,8 +4,10 @@
     ci_local_scanner: true
   when:
     - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
-    - (ci_metrics_local_file | default('') | trim | length > 0) or
-      (ci_metrics_aggregate_host | default('') | trim | length > 0)
+
+- name: Set ci_metrics_aggregate_host
+  ansible.builtin.set_fact:
+    ci_metrics_aggregate_host: "{{ ci_metrics_aggregate_host | default(inventory_hostname) }}"
 
 - block:
     - name: Check if directories exist and are readable
@@ -89,14 +91,6 @@
       loop_control:
         label: "{{ item }}"
 
-    - name: Set Local Exporter true if all conditions met
-      ansible.builtin.set_fact:
-         ci_local_exporter: true
-      when:
-        - ci_cert_info | default('') | trim | length > 0
-        - (ci_cert_info | selectattr('not_after', 'defined') | list | length) > 0
-        - ci_metrics_local_file | default('') | trim | length > 0
-
     - name: Set Local Sender true if all conditions met
       ansible.builtin.set_fact:
         ci_local_sender: true
@@ -120,12 +114,27 @@
             | sum(start=[])
           }}
   always:
-    - name: Set Aggregate Exporter true if all conditions met
+    - name: Set Aggregate metrics true if all conditions met
       ansible.builtin.set_fact:
-        ci_aggregate_exporter: true
+        ci_aggregate_metrics: true
       when:
         - ci_cert_info_aggr | default('') | trim | length > 0
         - (ci_cert_info_aggr | selectattr('not_after', 'defined') | list | length) > 0
+
+    - name: Set Local Exporter true if all conditions met
+      ansible.builtin.set_fact:
+         ci_local_exporter: true
+      when:
+        - ci_aggregate_metrics | default(false)
+        - ci_metrics_local_file | default('') | trim | length > 0
+
+    - name: Set Pushgateway Exporter true if all conditions met
+      ansible.builtin.set_fact:
+        ci_pushgateway_exporter: true
+      when:
+        - ci_aggregate_metrics | default(false)
+        - ci_pushgateway_host | default('') | trim | length > 0
   when:
-    - ci_metrics_aggregate_file | default('') | trim | length > 0
+    - (ci_metrics_local_file | default('') | trim | length > 0) or
+      (ci_pushgateway_host | default('') | trim | length > 0)
 

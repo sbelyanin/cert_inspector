@@ -3,7 +3,7 @@
 {% if cert_data is defined %}
 {% for result in cert_data %}
 {% if not result.failed %}
-cert_expiry_seconds{cert_path="{{ result.item.path }}", issuer="{{ result.issuer.commonName | default('unknown') }}", subject="{{ result.subject_alt_name[0] if result.subject_alt_name else (result.subject.commonName | default('unknown')) }}"} {{ result.remaining }}
+cert_expiry_seconds{path="{{ result.item.path }}", issuer="{{ result.issuer.commonName | default('unknown') }}", subject="{{ result.subject_alt_name[0] if result.subject_alt_name else (result.subject.commonName | default('unknown')) }}"} {{ result.remaining }}
 {% endif %}
 {% endfor %}
 {% endif %}

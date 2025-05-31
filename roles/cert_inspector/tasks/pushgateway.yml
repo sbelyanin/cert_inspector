@@ -1,0 +1,28 @@
+---
+- block:
+    - name: Prepare metrics payload
+      set_fact:
+        pushgateway_payload: |
+          # TYPE cert_expiry_seconds gauge
+          {% for cert in ci_cert_info %}
+          cert_expiry_seconds{
+            cert_path="{{ cert.item.path | replace('"', '\\"') }}",
+            issuer="{{ cert.issuer.common_name | default('unknown') | replace('"', '\\"') }}",
+            subject="{{ cert.subject.common_name | default('unknown') | replace('"', '\\"') }}",
+            hostname="{{ cert.hostname }}"
+          } {{ cert.expiry_seconds }}
+          {% endfor %}
+
+    - name: Send metrics to Pushgateway
+      uri:
+        url: "http://pushgateway.example.com:9091/metrics/job/cert_expiry/instance/{{ inventory_hostname }}"
+        method: POST
+        body: "{{ pushgateway_payload }}"
+        body_format: text
+        headers:
+          Content-Type: text/plain
+
+  when:
+    - ci_pushgateway_host | default('') | trim | length > 0
+    - ci_aggregate_exporter | default(false)
+

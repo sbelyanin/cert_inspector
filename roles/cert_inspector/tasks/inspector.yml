@@ -1,42 +1,5 @@
 ---
 - block:
-    - name: Create aggregated directories and set permissions
-      ansible.builtin.file:
-        path: "{{ ci_metrics_aggregate_file | dirname }}"
-        state: directory
-        recurse: yes
-        owner: "{{ metrics_owner }}"
-        group: "{{ metrics_group }}"
-        mode: "{{ metrics_dir_mode }}"
-
-    - name: Generate temp aggregated metrics file
-      ansible.builtin.template:
-        src: ci_metrics.prom.j2
-        dest: "{{ ci_metrics_aggregate_file }}.tmp"
-        owner: "{{ metrics_owner }}"
-        group: "{{ metrics_group }}"
-        mode: "{{ metrics_file_mode }}"
-      vars:
-        cert_data: "{{ ci_cert_info_aggr }}"
-
-    - name: Atomically replace aggregated metrics file
-      ansible.builtin.command:
-        cmd: "mv {{ ci_metrics_aggregate_file }}.tmp {{ ci_metrics_aggregate_file }}"
-        removes: "{{ ci_metrics_aggregate_file }}.tmp"
-
-  always:
-    - name: Remove unused variables
-      ansible.builtin.set_fact:
-        "{{ item }}": null
-      loop:
-        - ci_cert_info_aggr
-      when: vars[item] is defined
-      loop_control:
-        label: "{{ item }}"
-  when:
-    - ci_aggregate_exporter | default(false)
-
-- block:
     - name: Create host directories and set permissions
       ansible.builtin.file:
         path: "{{ ci_metrics_local_file | dirname }}"
@@ -54,21 +17,11 @@
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
       vars:
-        cert_data: "{{ ci_cert_info }}"
+        cert_data: "{{ ci_cert_info_aggr }}"
 
     - name: Atomically replace local metrics file
       ansible.builtin.command:
         cmd: "mv {{ ci_metrics_local_file }}.tmp {{ ci_metrics_local_file }}"
         removes: "{{ ci_metrics_local_file }}.tmp"
-
-  always:
-    - name: Remove unused variables
-      ansible.builtin.set_fact:
-        "{{ item }}": null
-      loop:
-        - ci_cert_info
-      when: vars[item] is defined
-      loop_control:
-        label: "{{ item }}"
   when:
     - ci_local_exporter | default(false)

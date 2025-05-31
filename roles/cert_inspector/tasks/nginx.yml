@@ -36,7 +36,7 @@
           }}
       when: nginx_link_conf_type is not defined
   when:
-    - (ci_local_exporter | default(false)) or (ci_aggregate_exporter | default(false))
+    - ci_local_exporter | default(false)
 
 - block:
     - name: Install Nginx/Angie
@@ -76,4 +76,4 @@
     - nginx_conf_path | default('') | trim | length > 0
     - nginx_enabled_conf_path | default('') | trim | length > 0
     - nginx_link_conf_type | default('') | trim | length > 0
-    - (ci_local_exporter | default(false)) or (ci_aggregate_exporter | default(false))
+    - ci_local_exporter | default(false)
