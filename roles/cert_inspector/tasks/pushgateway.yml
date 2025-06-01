@@ -1,28 +1,26 @@
 ---
-- block:
-    - name: Prepare metrics payload
-      set_fact:
-        pushgateway_payload: |
-          # TYPE cert_expiry_seconds gauge
-          {% for cert in ci_cert_info %}
-          cert_expiry_seconds{
-            cert_path="{{ cert.item.path | replace('"', '\\"') }}",
-            issuer="{{ cert.issuer.common_name | default('unknown') | replace('"', '\\"') }}",
-            subject="{{ cert.subject.common_name | default('unknown') | replace('"', '\\"') }}",
-            hostname="{{ cert.hostname }}"
-          } {{ cert.expiry_seconds }}
+- name: Prepare and send metrics to Pushgateway
+  uri:
+    url: "http://{{ci_pushgateway_host}}/metrics/job/cert_expiry/instance/{{ inventory_hostname }}"
+    method: POST
+    body: |-
+         # HELP cert_expiry_seconds Time until certificate expires in seconds
+         # TYPE cert_expiry_seconds gauge
+         {% for cert in ci_cert_info_aggr %}
+         {% if not cert.failed %}
+         {% set labels = [
+            'hostname="' ~ cert.hostname | default('unknown') ~ '"',
+            'path="' ~ (cert.item.path | default('unknown') | replace('"', '\\"')) ~ '"',
+            'issuer="' ~ (cert.issuer.commonName | default('unknown') | replace('"', '\\"')) ~ '"',
+            'subject="' ~ ((cert.subject_alt_name[0] if cert.subject_alt_name else cert.subject.commonName | default('unknown')) | replace('"', '\\"')) ~ '"'
+          ] | join(",") %}
+          cert_expiry_seconds{ {{ labels }} } {{ cert.remaining | default(0) }}
+          {% endif %}
           {% endfor %}
 
-    - name: Send metrics to Pushgateway
-      uri:
-        url: "http://pushgateway.example.com:9091/metrics/job/cert_expiry/instance/{{ inventory_hostname }}"
-        method: POST
-        body: "{{ pushgateway_payload }}"
-        body_format: text
-        headers:
-          Content-Type: text/plain
-
+    body_format: raw
+    headers:
+      Content-Type: text/plain
   when:
-    - ci_pushgateway_host | default('') | trim | length > 0
-    - ci_aggregate_exporter | default(false)
+    - ci_pushgateway_exporter | default(false)
 

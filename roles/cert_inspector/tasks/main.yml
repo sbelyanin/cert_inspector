@@ -22,3 +22,9 @@
   tags:
     - never
     - ci_prometheus
+
+- name: Import Pushgateway tasks
+  ansible.builtin.import_tasks: pushgateway.yml
+  tags:
+    - never
+    - ci_pushgateway
