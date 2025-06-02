@@ -5,25 +5,31 @@
     - always
     - ci_init
 
-- name: Import Inspector tasks
-  ansible.builtin.import_tasks: inspector.yml
+- name: Import Scan and Agregate tasks
+  ansible.builtin.import_tasks: scan.yml
   tags:
     - always
-    - ci_inspector
+    - ci_scan
 
-- name: Import Nginx tasks
+- name: Import Local Exporter tasks
+  ansible.builtin.import_tasks: local.yml
+  tags:
+    - always
+    - ci_local
+
+- name: Import Nginx Server tasks
   ansible.builtin.import_tasks: nginx.yml
   tags:
     - never
     - ci_nginx
 
-- name: Import Prometheus tasks
+- name: Import Prometheus Server tasks
   ansible.builtin.import_tasks: prometheus.yml
   tags:
     - never
     - ci_prometheus
 
-- name: Import Pushgateway tasks
+- name: Import Pushgateway Exporter tasks
   ansible.builtin.import_tasks: pushgateway.yml
   tags:
     - never

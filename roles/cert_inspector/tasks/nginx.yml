@@ -36,14 +36,9 @@
           }}
       when: nginx_link_conf_type is not defined
   when:
-    - ci_local_exporter | default(false)
+    - ci_local_receiver | default(false)
 
 - block:
-    - name: Install Nginx/Angie
-      ansible.builtin.package:
-        name: "{{ nginx_package }}"
-        state: present
-
     - name: Generate .htpasswd file
       community.general.htpasswd:
         path: /etc/nginx/.htpasswd
@@ -76,4 +71,4 @@
     - nginx_conf_path | default('') | trim | length > 0
     - nginx_enabled_conf_path | default('') | trim | length > 0
     - nginx_link_conf_type | default('') | trim | length > 0
-    - ci_local_exporter | default(false)
+    - ci_local_receiver | default(false)

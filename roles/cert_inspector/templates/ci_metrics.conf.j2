@@ -1,5 +1,4 @@
 {% set location_paths = ['/', '/metrics'] %}
-{% if ci_local_exporter is defined and ci_local_exporter %}
 server {
     listen {{ local_metrics_port }};
     server_name _;
@@ -14,4 +13,4 @@ server {
     }
 {% endfor %}
 }
-{% endif %}
+
