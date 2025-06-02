@@ -1,6 +1,6 @@
 ---
 - name: Prepare and send metrics to Pushgateway
-  uri:
+  ansible.builtin.uri:
     url: "http://{{ci_pushgateway_host}}/metrics/job/cert_expiry/instance/{{ inventory_hostname }}"
     method: POST
     body: |-

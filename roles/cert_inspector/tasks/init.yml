@@ -5,9 +5,34 @@
   when:
     - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
 
-- name: Set ci_metrics_aggregate_host
+- name: Validate and set Aggregate Host fact
   ansible.builtin.set_fact:
-    ci_metrics_aggregate_host: "{{ ci_metrics_aggregate_host | default(inventory_hostname) }}"
+    ci_metrics_aggregate_host: >-
+      {%- set target_host = ci_metrics_aggregate_host | default('') | trim -%}
+      {%- if target_host and target_host in groups['all'] -%}
+      {{ target_host }}
+      {%- else -%}
+      {{ inventory_hostname }}
+      {%- endif -%}
+
+- name: Set Local Reciver true if all conditions met
+  ansible.builtin.set_fact:
+    ci_metrics_aggregate_reciver: true
+  when: >
+    inventory_hostname in (
+      {% set hosts = [] %}
+      {% for host in ansible_play_hosts %}
+        {% if hostvars[host].ci_metrics_aggregate_host is defined and hostvars[host].ci_metrics_aggregate_host | length > 0 %}
+          {% set _ = hosts.append(hostvars[host].ci_metrics_aggregate_host) %}
+        {% endif %}
+      {% endfor %}
+      {{ hosts | unique | to_json }}
+    )
+
+- name: Debug ci_metrics_aggregate_reciver
+  debug:
+    var: ci_metrics_aggregate_reciver
+
 
 - block:
     - name: Check if directories exist and are readable
@@ -87,6 +112,7 @@
         - dir_stats
         - found_files
         - all_files
+        - ci_scan_directories
       when: vars[item] is defined
       loop_control:
         label: "{{ item }}"
@@ -114,6 +140,15 @@
             | sum(start=[])
           }}
   always:
+    - name: Remove unused variables
+      ansible.builtin.set_fact:
+        "{{ item }}": null
+      loop:
+        - ci_cert_info
+      when: vars[item] is defined
+      loop_control:
+        label: "{{ item }}"
+
     - name: Set Aggregate metrics true if all conditions met
       ansible.builtin.set_fact:
         ci_aggregate_metrics: true
