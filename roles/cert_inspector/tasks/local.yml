@@ -16,8 +16,6 @@
         owner: "{{ metrics_owner }}"
         group: "{{ metrics_group }}"
         mode: "{{ metrics_file_mode }}"
-#      vars:
-#        cert_data: "{{ ci_cert_info_aggr }}"
 
     - name: Atomically replace local metrics file
       ansible.builtin.command:

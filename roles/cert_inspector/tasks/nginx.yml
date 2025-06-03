@@ -37,6 +37,7 @@
       when: nginx_link_conf_type is not defined
   when:
     - ci_local_receiver | default(false)
+    - ci_metrics_local_file | default('') | trim | length > 0
 
 - block:
     - name: Generate .htpasswd file
@@ -72,3 +73,4 @@
     - nginx_enabled_conf_path | default('') | trim | length > 0
     - nginx_link_conf_type | default('') | trim | length > 0
     - ci_local_receiver | default(false)
+    - ci_metrics_local_file | default('') | trim | length > 0

@@ -135,5 +135,4 @@
         - ci_aggregate_metrics | default(false)
         - ci_pushgateway_host | default('') | trim | length > 0
   when:
-    - (ci_metrics_local_file | default('') | trim | length > 0) or
-      (ci_pushgateway_host | default('') | trim | length > 0)
+    - ci_local_receiver | default(false)

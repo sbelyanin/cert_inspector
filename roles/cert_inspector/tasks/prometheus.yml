@@ -3,7 +3,9 @@
   ansible.builtin.setup:
     filter: "{{ item }}"
   when:
-    - ci_local_exporter | default(false)
+    - local_metrics_port | default('') | trim | length > 0
+    - ci_local_receiver | default(false)
+    - ci_metrics_local_file | default('') | trim | length > 0
   loop:
     - ansible_host
 
@@ -12,7 +14,9 @@
     ci_prometheus_local_target: "{{ ansible_host }}:{{ local_metrics_port }}"
   when:
     - local_metrics_port | default('') | trim | length > 0
-    - ci_local_exporter | default(false)
+    - ci_local_receiver | default(false)
+    - ci_metrics_local_file | default('') | trim | length > 0
+    - ansible_host | default(false)
 
 - name: Generate targets file for Prometheus
   ansible.builtin.template:
