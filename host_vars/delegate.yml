@@ -6,3 +6,5 @@ ci_targets_file: "/srv/prometheus/ci_targets.yml"
 ci_pushgateway_host: "pushgateway:9091"
 
 ci_metrics_aggregate_host: delegate
+
+ci_metrics_local_file: "/var/lib/metrics/local_{{ inventory_hostname }}_certs.prom"

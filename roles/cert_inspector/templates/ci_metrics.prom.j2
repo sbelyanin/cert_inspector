@@ -1,7 +1,7 @@
 # HELP cert_expiry_seconds Time until certificate expires in seconds
 # TYPE cert_expiry_seconds gauge
-{% if cert_data is defined %}
-{% for result in cert_data %}
+{% if ci_cert_info_aggr is defined %}
+{% for result in ci_cert_info_aggr %}
 {% if not result.failed %}
 cert_expiry_seconds{path="{{ result.item.path }}", issuer="{{ result.issuer.commonName | default('unknown') }}", subject="{{ result.subject_alt_name[0] if result.subject_alt_name else (result.subject.commonName | default('unknown')) }}"} {{ result.remaining }}
 {% endif %}

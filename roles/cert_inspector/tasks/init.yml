@@ -1,10 +1,4 @@
 ---
-- name: Set Local Scanner true if all conditions met
-  ansible.builtin.set_fact:
-    ci_local_scanner: true
-  when:
-    - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
-
 - name: Validate and set Aggregate Host fact
   ansible.builtin.set_fact:
     ci_metrics_aggregate_host: >-
@@ -14,16 +8,30 @@
       {%- else -%}
       {{ inventory_hostname }}
       {%- endif -%}
+  when:
+    - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+
+- name: Set Local Scanner true if all conditions met
+  ansible.builtin.set_fact:
+    ci_local_scanner: true
+  when:
+    - (ci_scan_directories | default([]) | selectattr('path', 'defined') | map(attribute='path') | map('trim') | select('ne', '') | list | length) > 0
+    - ci_metrics_aggregate_host is defined
+    - ci_metrics_aggregate_host | trim | length > 0
+    - ci_metrics_aggregate_host in groups['all']
+    - (hostvars[ci_metrics_aggregate_host].ci_pushgateway_host | default('') | trim | length > 0) or
+      (hostvars[ci_metrics_aggregate_host].ci_metrics_local_file | default('') | trim | length > 0)
 
 - name: Set Local Receiver true if all conditions met
   ansible.builtin.set_fact:
     ci_local_receiver: true
   when:
-    inventory_hostname in
-    (ansible_play_hosts |
-     map('extract', hostvars) |
-     selectattr('ci_metrics_aggregate_host', 'defined') |
-     map(attribute='ci_metrics_aggregate_host') |
-     select('match', '.+') |
-     unique | list)
-
+    - (ci_pushgateway_host | default('') | trim | length > 0) or
+      (ci_metrics_local_file | default('') | trim | length > 0)
+    - ansible_play_hosts |
+      map('extract', hostvars) |
+      selectattr('ci_metrics_aggregate_host', 'defined') |
+      selectattr('ci_metrics_aggregate_host', '==', inventory_hostname) |
+      selectattr('ci_local_scanner', 'defined') |
+      selectattr('ci_local_scanner', '==', true) |
+      list | length > 0
