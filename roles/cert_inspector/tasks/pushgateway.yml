@@ -3,21 +3,7 @@
   ansible.builtin.uri:
     url: "http://{{ci_pushgateway_host}}/metrics/job/cert_expiry/instance/{{ inventory_hostname }}"
     method: POST
-    body: |-
-         # HELP cert_expiry_seconds Time until certificate expires in seconds
-         # TYPE cert_expiry_seconds gauge
-         {% for cert in ci_cert_info_aggr %}
-         {% if not cert.failed %}
-         {% set labels = [
-            'hostname="' ~ cert.hostname | default('unknown') ~ '"',
-            'path="' ~ (cert.item.path | default('unknown') | replace('"', '\\"')) ~ '"',
-            'issuer="' ~ (cert.issuer.commonName | default('unknown') | replace('"', '\\"')) ~ '"',
-            'subject="' ~ ((cert.subject_alt_name[0] if cert.subject_alt_name else cert.subject.commonName | default('unknown')) | replace('"', '\\"')) ~ '"'
-          ] | join(",") %}
-          {{ 'cert_expiry_seconds{' ~ labels ~ '} ' ~ (cert.remaining | default(0)) }}
-          {% endif %}
-          {% endfor %}
-
+    body: "{{ lookup('template', 'templates/ci_metrics.prom.j2') }}"
     body_format: raw
     headers:
       Content-Type: text/plain
