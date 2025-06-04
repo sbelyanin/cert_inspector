@@ -1,9 +1,13 @@
 # HELP cert_expiry_seconds Time until certificate expires in seconds
 # TYPE cert_expiry_seconds gauge
-{% if ci_cert_info_aggr is defined %}
-{% for result in ci_cert_info_aggr %}
-{% if not result.failed %}
-cert_expiry_seconds{path="{{ result.item.path }}", issuer="{{ result.issuer.commonName | default('unknown') }}", subject="{{ result.subject_alt_name[0] if result.subject_alt_name else (result.subject.commonName | default('unknown')) }}"} {{ result.remaining }}
+{% for cert in ci_cert_info_aggr %}
+{% if not cert.failed %}
+{% set labels = [
+  'hostname="' ~ cert.hostname | default('unknown') ~ '"',
+  'path="' ~ (cert.item.path | default('unknown') | replace('"', '\\"')) ~ '"',
+  'issuer="' ~ (cert.issuer.commonName | default('unknown') | replace('"', '\\"')) ~ '"',
+  'subject="' ~ ((cert.subject_alt_name[0] if cert.subject_alt_name else cert.subject.commonName | default('unknown')) | replace('"', '\\"')) ~ '"'
+] | join(",") %}
+{{ 'cert_expiry_seconds{' ~ labels ~ '} ' ~ (cert.remaining | default(0)) }}
 {% endif %}
 {% endfor %}
-{% endif %}

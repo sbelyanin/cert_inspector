@@ -14,7 +14,7 @@
             'issuer="' ~ (cert.issuer.commonName | default('unknown') | replace('"', '\\"')) ~ '"',
             'subject="' ~ ((cert.subject_alt_name[0] if cert.subject_alt_name else cert.subject.commonName | default('unknown')) | replace('"', '\\"')) ~ '"'
           ] | join(",") %}
-          cert_expiry_seconds{ {{ labels }} } {{ cert.remaining | default(0) }}
+          {{ 'cert_expiry_seconds{' ~ labels ~ '} ' ~ (cert.remaining | default(0)) }}
           {% endif %}
           {% endfor %}
 
