@@ -1,5 +1,7 @@
 ci_scan_directories:
   - path: "/etc"
 
-ci_metrics_aggregate_host: delegate
+#ci_metrics_aggregate_host: delegate
+
+ci_metrics_local_file: "/var/lib/metrics/local_{{ inventory_hostname }}_certs.prom"
 

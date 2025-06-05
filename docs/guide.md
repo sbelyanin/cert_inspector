@@ -27,8 +27,9 @@ ansible all -m ping -i inventory.yml --ask-pass
 ```
    - Если аутентификация по `ssh` ключу:
 ```bash
-ansible all -m ping -i inventory.yml
+ansible all -m ping -i inventory.yml --private-key "~/.ssh/ansible"
 ```
+Где `~/.ssh/ansible` приватный ключ для пользователя `ansible`.
 
 <a id="простой-playbook"></a>
  - Проверьте или отредактируйте **простой Playbook** `playbooks/cert_inspector.yml`: 
@@ -36,42 +37,30 @@ ansible all -m ping -i inventory.yml
 - name: Certificate inspector
   hosts: cluster_hosts
   become: true
+  gather_facts: no
   roles:
      - role: cert_inspector
 ```
 Удалите `become: true` если авторизация на хостах позволяет вам читать файлы с сертификатами без использования `sudo` или по другим причинам безопасности.
 
 <a id="файл-с-метриками"></a>
+<a id="переменных-хостов"></a>
  - Сделаем так, чтобы **файл с метриками** был уникальным на "хостах" и при выполнении задачи не перезаписывался.
 Проверим файлы на наличие строк:
 host_vars/delegate.yml
 ```yaml
-metrics_host_file_path: "/tmp/prom_dhost_certs_metr.txt"
+ci_scan_directories:
+  - path: "/usr"
+ci_metrics_host_file: "/var/lib/metrics/local_{{ inventory_hostname }}_certs.prom"
 ```
 host_vars/localhost.yml
-```yaml
-metrics_host_file_path: "/tmp/prom_lhost_certs_metr.txt"
-```
-Непустая и объявленная переменная `metrics_host_file_path` определяет полный путь до файла с метриками на текущем хосте.
-Файл с метриками будет создаваться и содержать метрики с текущего хоста.
-
-<a id="переменных-хостов"></a>
- - Проверьте или отредактируйте файлы для **переменных хостов** для указания директорий где и с какими параметрами искать сертификаты.
-host_vars/delegate.yml
 ```yaml
 ci_scan_directories:
   - path: "/etc"
-    max_size: "-1m"
-    file_type: file
+ci_metrics_host_file: "/var/lib/metrics/local_{{ inventory_hostname }}_certs.prom"
 ```
-host_vars/localhost.yml
-```yaml
-ci_scan_directories:
-  - path: "/usr"
-    max_size: "-1m"
-    file_type: file
-```
-Непустая переменная `ci_scan_directories` должна содержать значение `path`, остальные не указанные значения подставляются из `cert_inspector/roles/cert_inspector/defaults/main.yml`.
+   - Непустая переменная `ci_scan_directories` должна содержать значение `path`, остальные не указанные значения подставляются из `cert_inspector/roles/cert_inspector/defaults/main.yml`.
+   - Непустая переменная `ci_metrics_host_file` определяет полный путь до файла с метриками на текущем хосте. Файл с метриками будет создаваться и содержать метрики с текущего хоста.
 
 <a id="запустите-playbook"></a>
  - **Запустите Playbook**:
@@ -82,37 +71,41 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 <a id="проверим-результат"></a>
  - **Проверим результат**:
 ```bash
-ls /tmp/prom_dhost_certs_metr.txt /tmp/prom_lhost_certs_metr.txt
-/tmp/prom_dhost_certs_metr.txt  /tmp/prom_lhost_certs_metr.txt
-
-cat /tmp/prom_dhost_certs_metr.txt
+$cat /var/lib/metrics/local_delegate_certs.prom 
 # HELP cert_expiry_seconds Time until certificate expires in seconds
 # TYPE cert_expiry_seconds gauge
-cert_expiry_seconds{cert_path="/etc/ssl/certs/ca-certificates.crt", issuer="ACCVRAIZ1", subject="email:accv@accv.es"} 178476948
-cert_expiry_seconds{cert_path="/etc/pki/fwupd-metadata/LVFS-CA.pem", issuer="LVFS CA", subject="URI:http://www.fwupd.org/"} 701767091
+cert_expiry_seconds{hostname="delegate",path="/usr/share/grub/canonical-uefi-ca.crt",issuer="Canonical Ltd. Master Certificate Authority",subject="Canonical Ltd. Master Certificate Authority"} 531704444
+cert_expiry_seconds{hostname="delegate",path="/usr/share/gnupg/sks-keyservers.netCA.pem",issuer="sks-keyservers.net CA",subject="sks-keyservers.net CA"} -84020310
 
-cat /tmp/prom_lhost_certs_metr.txt
+$ cat /var/lib/metrics/local_localhost_certs.prom 
 # HELP cert_expiry_seconds Time until certificate expires in seconds
 # TYPE cert_expiry_seconds gauge
-cert_expiry_seconds{cert_path="/usr/share/grub/canonical-uefi-ca.crt", issuer="Canonical Ltd. Master Certificate Authority", subject="Canonical Ltd. Master Certificate Authority"} 534364262
-cert_expiry_seconds{cert_path="/usr/share/gnupg/sks-keyservers.netCA.pem", issuer="sks-keyservers.net CA", subject="sks-keyservers.net CA"} -81360492
+cert_expiry_seconds{hostname="localhost",path="/etc/ssl/certs/ssl-cert-snakeoil.pem",issuer="localhost.localdomain",subject="DNS:localhost.localdomain"} 270590026
+cert_expiry_seconds{hostname="localhost",path="/etc/ssl/certs/ca-certificates.crt",issuer="ACCVRAIZ1",subject="email:accv@accv.es"} 175817130
+cert_expiry_seconds{hostname="localhost",path="/etc/pki/fwupd/LVFS-CA.pem",issuer="LVFS CA",subject="URI:http://www.fwupd.org/"} 699107273
+cert_expiry_seconds{hostname="localhost",path="/etc/pki/fwupd-metadata/LVFS-CA.pem",issuer="LVFS CA",subject="URI:http://www.fwupd.org/"} 699107273
+
 ```
 Отрицательное значение метрики `cert_expiry_seconds` означает, что срок действия сертификата истек.
 
 ## Использование тэгов
 <a id="no-tags"></a>
  - **Запуск роли без тэгов.**
-При запуске плайбука без указания тэгов запускается только основная часть роли `cert inspector`, которая выполняет задачи в зависимости от [роли хостов](#роли-хостов).
-Основная чсть будет запускаться по умолчанию даже с указанием тэгов, такое поведение можно изменить использовав параметр `--skip-tags "inspector"`.
+При запуске плайбука без указания тэгов запускается только основная часть роли `cert inspector`, которая выполняет задачи инициализации, сканирования и записи метрик в файлы.
+Для запуска частей роли, которые по умолчанию не запускаются, используйте параметр `--tags"`.
+Основная часть будет запускаться по умолчанию даже с указанием тэгов, такое поведение можно изменить использовав параметр `--skip-tags"`.
 #### Запуск
 ```bash
 ansible-playbook playbooks/cert_inspector.yml -i inventory.yml
 ```
 <a id="list-tags"></a>
  - **Какие тэги есть в роли на данный момент.**
+   - `ci_init` - запускает (по умолчанию) или пропускает часть роли для иницилизации переменных.
+   - `ci_scan` - запускает (по умолчанию) или пропускает часть роли для сканирования директорий и сертификатов.
+   - `ci_local` - запускает (по умолчанию) или пропускает часть роли для создания на хостах файлов с метрикаи.
+   - `ci_pushgateway` - запускает или пропускает (по умолчанию) часть роли отвечающей за ередачу метрик в `PushGateway`.
    - `ci_nginx` - запускает или пропускает (по умолчанию) часть роли отвечающей за создание конфигурационного файла для `nginx`.
-   - `ci_nginx` - запускает или пропускает (по умолчанию) часть роли отвечающей за создание конфигурационного файла для `prometheus`.
-   - `ci_inspector` - запускает (по умолчанию) или пропускает основную часть роли `cert inspector`.
+   - `ci_prometheus` - запускает или пропускает (по умолчанию) часть роли отвечающей за создание конфигурационного файла для `prometheus`.
 <a id="use-tags"></a>
  - **Запуск роли с тэгами.**
    - Запуск основной части и дополнительной части для `nginx`:
@@ -129,7 +122,7 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
 Задает одну из ролей хоста -`Local Scanner`.
 Задает параметры сканирования директорий и нахождения файлов.
 #### Одна или обе переменных:
-`metrics_host_file_path` объявлена и не пуста.
+`ci_metrics_host_file` объявлена и не пуста.
 Задает полный путь до файла куда будут записываться метрики с локального хоста.
 `ci_metrics_aggregate_host` объявлена и не пуста.
 Задает имя хоста из инвентори, который будет агрегировать локальные метрики с локального хоста.
@@ -137,8 +130,8 @@ ansible-playbook playbooks/cert_inspector.yml -i inventory.yml --tags "ci_nginx"
  - **Local Sender**: Часть роли `Local Scanner` в которой переменная `ci_metrics_aggregate_host` объявлена и не пуста.
 Передает локальные метрики на хост, выполняющий роль `Aggregate Exporter`.
 <a id="local-exporter"></a>
- - **Local Exporter**: Часть роли `Local Scanner` в которой переменная `metrics_host_file_path` объявлена и не пуста.
-Передает локальные метрики в локальный файл заданный в `metrics_host_file_path`.
+ - **Local Exporter**: Часть роли `Local Scanner` в которой переменная `ci_metrics_host_file_path` объявлена и не пуста.
+Передает локальные метрики в локальный файл заданный в `ci_metrics_host_file`.
 <a id="aggregate-exporter"></a>
  - **Aggregate Exporter**: Копирует локальные метрики с хостов, агрегирует их в единый список и записывает в файл, указанный в `metrics_aggregate_file_path`.
 
