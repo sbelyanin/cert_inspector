@@ -1,10 +1,13 @@
 all:
-   children:
-      cluster_hosts:
-         hosts:
-            localhost:
-               ansible_host: localhost
-               ansible_user: ansible
-            delegate:
-               ansible_host: localhost
-               ansible_user: ansible
+  vars:
+    ansible_port: 22
+    ansible_ssh_user: ansible
+    ansible_ssh_private_key_file: ~/.ssh/ansible
+
+  children:
+    cluster_hosts:
+      hosts:
+        localhost:
+          ansible_host: localhost
+        delegate:
+          ansible_host: localhost
